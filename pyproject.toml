@@ -8,6 +8,7 @@ packages = [{include = "ast_monitor_web"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+Flask = "*"
 
 
 [build-system]
