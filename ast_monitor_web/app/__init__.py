@@ -8,7 +8,7 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Change to a random secret key
 
     # Initialize CORS to allow connections from the React frontend
-    CORS(app, resources={r"/auth/*": {"origins": "http://localhost:3001"}})
+    CORS(app, origins=["http://localhost:3000", "http://localhost:3001"])
 
     jwt = JWTManager(app)
 
