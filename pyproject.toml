@@ -2,13 +2,16 @@
 name = "ast-monitor-web"
 version = "0.1.0"
 description = ""
-authors = [""]
+authors = ["Vanja Pajovic <vanja.pajovic@student.um.si>"]
 readme = "README.md"
 packages = [{include = "ast_monitor_web"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
 Flask = "*"
+authlib = "^1.3.0"
+oauth = "^1.0.1"
+auth = "^0.5.3"
 
 
 [build-system]
