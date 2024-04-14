@@ -1,14 +1,16 @@
-from werkzeug.security import generate_password_hash, check_password_hash
+from .database import db
 
-class User:
-    # This is a mock class representing a user in the database with a username and hashed password.
-    username = 'user'
-    password_hash = generate_password_hash('password')
+class User(db.Model):
+    __tablename__ = 'users'
 
-    @staticmethod
-    def find_by_username(username):
-        # In a real application, this method would query the database for a user with the given username.
-        # This is just a placeholder for demonstration purposes.
-        if User.username == username:
-            return User
-        return None
+    usersID = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    role = db.Column(db.String(15), nullable=False)
+
+    def __init__(self, username, password, email, role='user'):
+        self.username = username
+        self.password = password
+        self.email = email
+        self.role = role

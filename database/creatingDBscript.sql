@@ -3,10 +3,11 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS public.users
+CREATE TABLE public.users
 (
     "usersID" serial NOT NULL,
     username character varying(50) NOT NULL,
+	password character varying(255) NOT NULL,
     email character varying(100) NOT NULL,
     role character varying(15) NOT NULL,
     PRIMARY KEY ("usersID")
