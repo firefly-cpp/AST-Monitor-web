@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Authentication/Login';
 import Register from './Components/Authentication/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
+import ResetPassword from './Components/Authentication/ResetPassword';
 
 const App = () => {
   const [token, setToken] = useState('');
@@ -11,16 +13,20 @@ const App = () => {
   };
 
   return (
-    <div>
-      {!token ? (
-        <div>
-          <Login onLogin={handleLogin} />
-          <Register onRegister={handleLogin} />
-        </div>
-      ) : (
-        <Dashboard />
-      )}
-    </div>
+    <BrowserRouter>
+      <div>
+        {!token ? (
+          <Routes>
+            <Route path="/" element={<Login onLogin={handleLogin} />} />
+            <Route path="/register" element={<Register onRegister={handleLogin} />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        ) : (
+          <Dashboard />
+        )}
+      </div>
+    </BrowserRouter>
   );
 };
 
