@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import PasswordRecovery from './PasswordRecovery'; // Import the Password Recovery Component
+import PasswordRecovery from './PasswordRecovery';
+import { useNavigate } from 'react-router-dom';
+import '../../Styles/Auth.css';
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showRecovery, setShowRecovery] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -22,19 +25,19 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div>
+    <div className="auth-container">
       {!showRecovery ? (
-        <form onSubmit={handleSubmit}>
-          <label>
-            Username:
-            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-          </label>
-          <label>
-            Password:
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </label>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <h2>Login</h2>
+          <label>Username:</label>
+          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
+
+          <label>Password:</label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+
           <button type="submit">Login</button>
           <p onClick={() => setShowRecovery(true)}>Forgot Password?</p>
+          <p onClick={() => navigate('/register')}>Don't have an account? <a>Register</a></p>
         </form>
       ) : (
         <PasswordRecovery />

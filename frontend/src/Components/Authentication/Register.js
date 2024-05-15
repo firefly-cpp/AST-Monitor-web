@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../../Styles/Auth.css';
 
 const Register = ({ onRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -14,7 +17,7 @@ const Register = ({ onRegister }) => {
         password,
         email
       });
-      onRegister(data.access_token); // Assuming the backend sends back the access token on successful registration
+      onRegister(data.access_token);
       alert('Registration successful');
     } catch (error) {
       alert('Registration failed: ' + error.response.data.msg);
@@ -22,21 +25,24 @@ const Register = ({ onRegister }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Username:
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2>Register</h2>
+        <label>Username:</label>
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-      </label>
-      <label>
-        Password:
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </label>
-      <label>
-        Email:
+
+        <label>Email:</label>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
-      <button type="submit">Register</button>
-    </form>
+
+        <label>Password:</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+
+
+
+        <button type="submit">Register</button>
+        <p onClick={() => navigate('/login')}>Already have an account? <a>Login</a></p>
+      </form>
+    </div>
   );
 };
 
