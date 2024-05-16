@@ -13,13 +13,20 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const { data } = await axios.post('http://localhost:5000/auth/login', {
+      // Request to your backend
+      const response = await axios.post('http://localhost:5000/auth/login', {
         username,
         password
       });
-      onLogin(data.access_token);
+      // Destructure the token and role from the response data
+      const { access_token, role } = response.data;
+      // Trigger the onLogin function passed as a prop, sending both token and role
+      onLogin(access_token, role);
+      // Navigate to the dashboard or another page as needed
+      navigate('/dashboard');  // Adjust this as needed for your route setup
       alert('Login successful');
     } catch (error) {
+      // Handle errors, such as incorrect credentials or problems with the server
       alert('Login failed: ' + error.response.data.msg);
     }
   };
@@ -30,14 +37,20 @@ const Login = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="auth-form">
           <h2>Login</h2>
           <label>Username:</label>
-          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
           <label>Password:</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <button type="submit">Login</button>
           <p onClick={() => setShowRecovery(true)}>Forgot Password?</p>
-          <p onClick={() => navigate('/register')}>Don't have an account? <a>Register</a></p>
+          <p onClick={() => navigate('/register')}>Don't have an account? Register</p>
         </form>
       ) : (
         <PasswordRecovery />
