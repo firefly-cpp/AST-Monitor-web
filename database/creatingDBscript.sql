@@ -3,24 +3,45 @@
 BEGIN;
 
 
-CREATE TABLE public.users
+CREATE TABLE IF NOT EXISTS public.api_integrations
 (
-    "usersID" serial NOT NULL,
-    username character varying(50) NOT NULL,
-	password character varying(255) NOT NULL,
-    email character varying(100) NOT NULL,
-    role character varying(15) NOT NULL,
-    PRIMARY KEY ("usersID")
+    "integrationsID" serial NOT NULL,
+    "apisID" integer NOT NULL,
+    "usersID" integer NOT NULL,
+    CONSTRAINT api_integrations_pkey PRIMARY KEY ("integrationsID")
 );
 
-CREATE TABLE IF NOT EXISTS public.training_sessions
+CREATE TABLE IF NOT EXISTS public.apis
 (
-    "sessionsID" serial NOT NULL,
+    "apisID" serial NOT NULL,
+    provider character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    usage_info text COLLATE pg_catalog."default",
+    CONSTRAINT apis_pkey PRIMARY KEY ("apisID")
+);
+
+CREATE TABLE IF NOT EXISTS public.equipment
+(
+    "equipmentID" serial NOT NULL,
+    type character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    model character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    compatible_with character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT equipment_pkey PRIMARY KEY ("equipmentID")
+);
+
+CREATE TABLE IF NOT EXISTS public.memberships
+(
+    "membershipsID" serial NOT NULL,
     "usersID" integer NOT NULL,
-    date date NOT NULL,
-    duration interval NOT NULL,
-    type character varying NOT NULL,
-    PRIMARY KEY ("sessionsID")
+    "organizationsID" integer NOT NULL,
+    CONSTRAINT memberships_pkey PRIMARY KEY ("membershipsID")
+);
+
+CREATE TABLE IF NOT EXISTS public.organizations
+(
+    "organizationsID" serial NOT NULL,
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    type character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT organizations_pkey PRIMARY KEY ("organizationsID")
 );
 
 CREATE TABLE IF NOT EXISTS public.performance_metrics
@@ -30,8 +51,8 @@ CREATE TABLE IF NOT EXISTS public.performance_metrics
     heart_rate integer,
     speed numeric(5, 2),
     power_output numeric(5, 2),
-    gps_data text,
-    PRIMARY KEY ("metricsID")
+    gps_data text COLLATE pg_catalog."default",
+    CONSTRAINT performance_metrics_pkey PRIMARY KEY ("metricsID")
 );
 
 CREATE TABLE IF NOT EXISTS public.training_plans
@@ -40,33 +61,18 @@ CREATE TABLE IF NOT EXISTS public.training_plans
     "usersID" integer NOT NULL,
     start_date date NOT NULL,
     end_date date NOT NULL,
-    goal character varying(255),
-    PRIMARY KEY ("plansID")
+    goal character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT training_plans_pkey PRIMARY KEY ("plansID")
 );
 
-CREATE TABLE IF NOT EXISTS public.organizations
+CREATE TABLE IF NOT EXISTS public.training_sessions
 (
-    "organizationsID" serial NOT NULL,
-    name character varying(255) NOT NULL,
-    type character varying(100) NOT NULL,
-    PRIMARY KEY ("organizationsID")
-);
-
-CREATE TABLE IF NOT EXISTS public.memberships
-(
-    "membershipsID" serial NOT NULL,
+    "sessionsID" serial NOT NULL,
     "usersID" integer NOT NULL,
-    "organizationsID" integer NOT NULL,
-    PRIMARY KEY ("membershipsID")
-);
-
-CREATE TABLE IF NOT EXISTS public.equipment
-(
-    "equipmentID" serial NOT NULL,
-    type character varying(100) NOT NULL,
-    model character varying(100) NOT NULL,
-    compatible_with character varying(255),
-    PRIMARY KEY ("equipmentID")
+    date date NOT NULL,
+    duration interval NOT NULL,
+    type character varying COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT training_sessions_pkey PRIMARY KEY ("sessionsID")
 );
 
 CREATE TABLE IF NOT EXISTS public.user_equipment
@@ -74,83 +80,24 @@ CREATE TABLE IF NOT EXISTS public.user_equipment
     "user_equipmentID" serial NOT NULL,
     "usersID" integer NOT NULL,
     "equipmentID" integer NOT NULL,
-    PRIMARY KEY ("user_equipmentID")
+    CONSTRAINT user_equipment_pkey PRIMARY KEY ("user_equipmentID")
 );
 
-CREATE TABLE IF NOT EXISTS public.apis
+CREATE TABLE IF NOT EXISTS public.users
 (
-    "apisID" serial NOT NULL,
-    provider character varying(255) NOT NULL,
-    usage_info text,
-    PRIMARY KEY ("apisID")
+    "usersID" serial NOT NULL,
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    role character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    date_of_birth date,
+    height_cm integer,
+    weight_kg integer,
+    CONSTRAINT users_pkey PRIMARY KEY ("usersID")
 );
-
-CREATE TABLE IF NOT EXISTS public.api_integrations
-(
-    "integrationsID" serial NOT NULL,
-    "apisID" integer NOT NULL,
-    "usersID" integer NOT NULL,
-    PRIMARY KEY ("integrationsID")
-);
-
-ALTER TABLE IF EXISTS public.training_sessions
-    ADD FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.performance_metrics
-    ADD FOREIGN KEY ("sessionsID")
-    REFERENCES public.training_sessions ("sessionsID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.training_plans
-    ADD FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.memberships
-    ADD FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.memberships
-    ADD FOREIGN KEY ("organizationsID")
-    REFERENCES public.organizations ("organizationsID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.user_equipment
-    ADD FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.user_equipment
-    ADD FOREIGN KEY ("equipmentID")
-    REFERENCES public.equipment ("equipmentID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
 
 ALTER TABLE IF EXISTS public.api_integrations
-    ADD FOREIGN KEY ("apisID")
+    ADD CONSTRAINT "api_integrations_apisID_fkey" FOREIGN KEY ("apisID")
     REFERENCES public.apis ("apisID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
@@ -158,7 +105,63 @@ ALTER TABLE IF EXISTS public.api_integrations
 
 
 ALTER TABLE IF EXISTS public.api_integrations
-    ADD FOREIGN KEY ("usersID")
+    ADD CONSTRAINT "api_integrations_usersID_fkey" FOREIGN KEY ("usersID")
+    REFERENCES public.users ("usersID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.memberships
+    ADD CONSTRAINT "memberships_organizationsID_fkey" FOREIGN KEY ("organizationsID")
+    REFERENCES public.organizations ("organizationsID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.memberships
+    ADD CONSTRAINT "memberships_usersID_fkey" FOREIGN KEY ("usersID")
+    REFERENCES public.users ("usersID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.performance_metrics
+    ADD CONSTRAINT "performance_metrics_sessionsID_fkey" FOREIGN KEY ("sessionsID")
+    REFERENCES public.training_sessions ("sessionsID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.training_plans
+    ADD CONSTRAINT "training_plans_usersID_fkey" FOREIGN KEY ("usersID")
+    REFERENCES public.users ("usersID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.training_sessions
+    ADD CONSTRAINT "training_sessions_usersID_fkey" FOREIGN KEY ("usersID")
+    REFERENCES public.users ("usersID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.user_equipment
+    ADD CONSTRAINT "user_equipment_equipmentID_fkey" FOREIGN KEY ("equipmentID")
+    REFERENCES public.equipment ("equipmentID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.user_equipment
+    ADD CONSTRAINT "user_equipment_usersID_fkey" FOREIGN KEY ("usersID")
     REFERENCES public.users ("usersID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
