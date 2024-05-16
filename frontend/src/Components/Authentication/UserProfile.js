@@ -1,0 +1,81 @@
+// src/Components/UserProfile/UserProfile.js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../../Styles/UserProfile.css'; // Import the CSS file
+
+const UserProfile = () => {
+  const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("No token found, redirecting to login");
+      navigate('/login');
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Profile data:', response.data); // Check what you receive here
+        setProfile(response.data);
+      } catch (error) {
+        console.error('Error fetching profile:', error.response?.data);
+        navigate('/login'); // Redirect on failure to fetch profile
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  if (!profile) {
+    return <div className="profile-container">Loading profile...</div>;
+  }
+
+  return (
+    <div className="profile-container">
+      <h3>User Profile</h3>
+      <table>
+        <tbody>
+          <tr>
+            <th>Username</th>
+            <td>{profile.username}</td>
+          </tr>
+          <tr>
+            <th>Email</th>
+            <td>{profile.email}</td>
+          </tr>
+          <tr>
+            <th>Role</th>
+            <td>{profile.role}</td>
+          </tr>
+          {profile.date_of_birth && (
+            <tr>
+              <th>Date of Birth</th>
+              <td>{profile.date_of_birth}</td>
+            </tr>
+          )}
+          {profile.height_cm && (
+            <tr>
+              <th>Height</th>
+              <td>{profile.height_cm} cm</td>
+            </tr>
+          )}
+          {profile.weight_kg && (
+            <tr>
+              <th>Weight</th>
+              <td>{profile.weight_kg} kg</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <button onClick={() => navigate('/edit-profile')}>Edit Profile</button>
+    </div>
+  );
+};
+
+export default UserProfile;

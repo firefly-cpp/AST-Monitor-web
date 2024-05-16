@@ -1,10 +1,11 @@
 from flask import request, jsonify, Blueprint, current_app, url_for, render_template, redirect
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from ..models.user import db, User
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
 from ..__init__ import mail
+from sqlalchemy.exc import IntegrityError
 
 
 
@@ -14,27 +15,46 @@ auth_bp = Blueprint('auth_bp', __name__)
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-
     username = data['username']
     email = data['email']
     password = data['password']
-    role = data.get('role', 'user')  # Default role is 'user'
+    role = data.get('role')
 
-    # Check if user already exists
-    if User.query.filter((User.username == username) | (User.email == email)).first():
-        return jsonify({'message': 'User already exists'}), 409
+    # Create a new user object depending on the role
+    if role == 'cyclist':
+        date_of_birth = data.get('date_of_birth')
+        height_cm = data.get('height_cm')
+        weight_kg = data.get('weight_kg')
+        new_user = User(
+            username=username,
+            email=email,
+            password=generate_password_hash(password),
+            role=role,
+            date_of_birth=date_of_birth,
+            height_cm=height_cm,
+            weight_kg=weight_kg
+        )
+    elif role == 'coach':
+        new_user = User(
+            username=username,
+            email=email,
+            password=generate_password_hash(password),
+            role=role
+        )
+    else:
+        return jsonify({"message": "Invalid user role"}), 400
 
-    new_user = User(
-        username=username,
-        email=email,
-        password=generate_password_hash(password),
-        role=role
-    )
-
-    db.session.add(new_user)
-    db.session.commit()
-
-    return jsonify({'message': 'User registered successfully'}), 201
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'User registered successfully'}), 201
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'username' in str(e.orig):
+            return jsonify({'message': 'Username already exists'}), 409
+        elif 'email' in str(e.orig):
+            return jsonify({'message': 'Email already exists'}), 409
+        return jsonify({'message': 'Failed to register user'}), 400
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -99,3 +119,41 @@ def reset_with_token(token):
         except (SignatureExpired, BadSignature):
             return jsonify({"message": "The reset link is invalid or has expired."}), 400
 
+
+
+# Profile Management
+
+@auth_bp.route('/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    current_username = get_jwt_identity()
+    user = User.query.filter_by(username=current_username).first()
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify(user.to_dict()), 200
+
+@auth_bp.route('/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    current_username = get_jwt_identity()
+    user = User.query.filter_by(username=current_username).first()
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    username_changed = False
+
+    if 'username' in data and data['username'] != user.username:
+        user.username = data['username']
+        username_changed = True  # Set flag if username is updated
+
+    if 'date_of_birth' in data:
+        user.date_of_birth = data['date_of_birth']
+    if 'height_cm' in data:
+        user.height_cm = data['height_cm']
+    if 'weight_kg' in data:
+        user.weight_kg = data['weight_kg']
+
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully", "username_changed": username_changed}), 200

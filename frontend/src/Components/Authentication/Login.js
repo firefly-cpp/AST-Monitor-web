@@ -13,12 +13,16 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const { data } = await axios.post('http://localhost:5000/auth/login', {
+      const response = await axios.post('http://localhost:5000/auth/login', {
         username,
         password
       });
-      onLogin(data.access_token);
+      // Store the token in localStorage
+      localStorage.setItem('token', response.data.access_token);
+      // Call the onLogin function to update the app's state
+      onLogin(response.data.access_token);
       alert('Login successful');
+      navigate('/dashboard'); // Optionally redirect the user to the dashboard
     } catch (error) {
       alert('Login failed: ' + error.response.data.msg);
     }
@@ -37,7 +41,7 @@ const Login = ({ onLogin }) => {
 
           <button type="submit">Login</button>
           <p onClick={() => setShowRecovery(true)}>Forgot Password?</p>
-          <p onClick={() => navigate('/register')}>Don't have an account? <a>Register</a></p>
+          <p onClick={() => navigate('/register')}>Don't have an account? <a href="/register">Register</a></p>
         </form>
       ) : (
         <PasswordRecovery />
