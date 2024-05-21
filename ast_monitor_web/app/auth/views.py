@@ -6,8 +6,10 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
 from ..__init__ import mail
 from sqlalchemy.exc import IntegrityError
-
-
+from flask import Flask, jsonify
+from sport_activities_features.tcx_manipulation import TCXFile
+from sport_activities_features.hill_identification import HillIdentification
+from sport_activities_features.weather_identification import WeatherIdentification
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -157,3 +159,28 @@ def update_profile():
 
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "username_changed": username_changed}), 200
+
+@auth_bp.route('/tcx-data', methods=['GET'])
+def get_tcx_data():
+    # The path to the TCX file should be securely retrieved or configured
+    path_to_tcx_file = "C:/Users/Korisnik/Downloads/Sport5/Sport5/1/1.tcx"
+    tcx_file = TCXFile()
+    data = tcx_file.read_one_file(path_to_tcx_file)
+    
+    # Extract additional details manually
+    total_ascent = sum([data['altitudes'][i] - data['altitudes'][i-1] for i in range(1, len(data['altitudes'])) if data['altitudes'][i] > data['altitudes'][i-1]])
+    total_descent = sum([data['altitudes'][i-1] - data['altitudes'][i] for i in range(1, len(data['altitudes'])) if data['altitudes'][i] < data['altitudes'][i-1]])
+    average_speed = sum(data['speeds']) / len(data['speeds']) if data['speeds'] else 0
+    average_heart_rate = sum(data['heartrates']) / len(data['heartrates']) if data['heartrates'] else 0
+    
+    detailed_data = {
+        "total_distance": data['total_distance'],
+        "total_ascent": total_ascent,
+        "total_descent": total_descent,
+        "average_speed": average_speed,
+        "average_heart_rate": average_heart_rate
+    }
+    
+    return jsonify(detailed_data)
+
+# Ensure to register the blueprint if not already done in your Flask application setup
