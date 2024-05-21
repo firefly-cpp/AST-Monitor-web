@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import '../../Styles/Auth.css'; // Ensure this path is correct
 
@@ -22,7 +22,7 @@ const PasswordReset = () => {
       alert('Password reset successfully!');
       navigate('/login');
     } catch (error) {
-      alert('Failed to reset password.');
+      alert('Failed to reset password: ' + (error.response.data.msg || 'Unknown error'));
     }
   };
 

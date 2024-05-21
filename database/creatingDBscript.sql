@@ -19,6 +19,32 @@ CREATE TABLE IF NOT EXISTS public.apis
     CONSTRAINT apis_pkey PRIMARY KEY ("apisID")
 );
 
+CREATE TABLE IF NOT EXISTS public.coaches
+(
+    "coachID" serial NOT NULL,
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT coaches_pkey PRIMARY KEY ("coachID"),
+    CONSTRAINT coaches_email_unique UNIQUE (email),
+    CONSTRAINT coaches_username_key UNIQUE (username)
+);
+
+CREATE TABLE IF NOT EXISTS public.cyclists
+(
+    "cyclistID" serial NOT NULL,
+    "coachID" integer NOT NULL,
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    date_of_birth date,
+    height_cm integer,
+    weight_kg integer,
+    CONSTRAINT cyclists_pkey PRIMARY KEY ("cyclistID"),
+    CONSTRAINT cyclists_email_unique UNIQUE (email),
+    CONSTRAINT cyclists_username_key UNIQUE (username)
+);
+
 CREATE TABLE IF NOT EXISTS public.equipment
 (
     "equipmentID" serial NOT NULL,
@@ -83,19 +109,6 @@ CREATE TABLE IF NOT EXISTS public.user_equipment
     CONSTRAINT user_equipment_pkey PRIMARY KEY ("user_equipmentID")
 );
 
-CREATE TABLE IF NOT EXISTS public.users
-(
-    "usersID" serial NOT NULL,
-    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    role character varying(15) COLLATE pg_catalog."default" NOT NULL,
-    date_of_birth date,
-    height_cm integer,
-    weight_kg integer,
-    CONSTRAINT users_pkey PRIMARY KEY ("usersID")
-);
-
 ALTER TABLE IF EXISTS public.api_integrations
     ADD CONSTRAINT "api_integrations_apisID_fkey" FOREIGN KEY ("apisID")
     REFERENCES public.apis ("apisID") MATCH SIMPLE
@@ -104,25 +117,16 @@ ALTER TABLE IF EXISTS public.api_integrations
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.api_integrations
-    ADD CONSTRAINT "api_integrations_usersID_fkey" FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
+ALTER TABLE IF EXISTS public.cyclists
+    ADD CONSTRAINT fk_coach FOREIGN KEY ("coachID")
+    REFERENCES public.coaches ("coachID") MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS public.memberships
     ADD CONSTRAINT "memberships_organizationsID_fkey" FOREIGN KEY ("organizationsID")
     REFERENCES public.organizations ("organizationsID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.memberships
-    ADD CONSTRAINT "memberships_usersID_fkey" FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
@@ -136,33 +140,16 @@ ALTER TABLE IF EXISTS public.performance_metrics
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.training_plans
-    ADD CONSTRAINT "training_plans_usersID_fkey" FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.training_sessions
-    ADD CONSTRAINT "training_sessions_usersID_fkey" FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+ALTER TABLE IF EXISTS public.user_equipment
+    ADD CONSTRAINT "user_equipment_cyclistID_fkey" FOREIGN KEY ("usersID")
+    REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.user_equipment
     ADD CONSTRAINT "user_equipment_equipmentID_fkey" FOREIGN KEY ("equipmentID")
     REFERENCES public.equipment ("equipmentID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.user_equipment
-    ADD CONSTRAINT "user_equipment_usersID_fkey" FOREIGN KEY ("usersID")
-    REFERENCES public.users ("usersID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;

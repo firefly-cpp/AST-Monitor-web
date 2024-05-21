@@ -19,6 +19,9 @@ psycopg2-binary = "^2.9.9"
 flask-migrate = "^4.0.7"
 flask-mail = "^0.9.1"
 python-dotenv = "^1.0.1"
+gpxpy = "^1.4.2"
+sport-activities-features = "^0.4.0"
+
 
 
 [build-system]

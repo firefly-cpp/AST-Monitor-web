@@ -1,3 +1,4 @@
+//PasswordRecovery.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -12,9 +13,9 @@ const PasswordRecovery = () => {
     try {
       const response = await axios.post('http://localhost:5000/auth/recover', { email });
       alert('If that email address is in our database, we will send you an email to reset your password.');
-      navigate('/');
+      navigate('/login');  // Redirect to login after request
     } catch (error) {
-      alert('Error: ' + error.response.data.msg);
+      alert('Error: ' + (error.response.data.msg || 'Failed to send recovery email.'));
     }
   };
 

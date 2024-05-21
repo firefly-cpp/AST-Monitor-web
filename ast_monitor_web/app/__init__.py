@@ -3,6 +3,8 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from dotenv import load_dotenv
+from .auth import auth_bp
+# from .dashboard.coach import coach_bp
 from .models.database import db  # Corrected import
 import os
 import secrets
@@ -40,7 +42,8 @@ def create_app():
 
     mail.init_app(app)
 
-    from .auth import auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
 
+
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    # app.register_blueprint(coach_bp, url_prefix='/coach')
     return app

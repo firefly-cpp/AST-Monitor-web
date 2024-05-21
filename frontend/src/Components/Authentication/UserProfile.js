@@ -1,8 +1,7 @@
-// src/Components/UserProfile/UserProfile.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../../Styles/UserProfile.css'; // Import the CSS file
+import '../../Styles/UserProfile.css'; // Ensure the CSS file path is correct
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -21,7 +20,6 @@ const UserProfile = () => {
         const response = await axios.get('http://localhost:5000/auth/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('Profile data:', response.data); // Check what you receive here
         setProfile(response.data);
       } catch (error) {
         console.error('Error fetching profile:', error.response?.data);
@@ -33,7 +31,7 @@ const UserProfile = () => {
   }, [navigate]);
 
   if (!profile) {
-    return <div className="profile-container">Loading profile...</div>;
+    return <div>Loading profile...</div>;
   }
 
   return (
@@ -48,10 +46,6 @@ const UserProfile = () => {
           <tr>
             <th>Email</th>
             <td>{profile.email}</td>
-          </tr>
-          <tr>
-            <th>Role</th>
-            <td>{profile.role}</td>
           </tr>
           {profile.date_of_birth && (
             <tr>
