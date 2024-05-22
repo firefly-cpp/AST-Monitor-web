@@ -2,7 +2,6 @@
 -- Please log an issue at https://github.com/pgadmin-org/pgadmin4/issues/new/choose if you find any bugs, including reproduction steps.
 BEGIN;
 
-
 CREATE TABLE IF NOT EXISTS public.api_integrations
 (
     "integrationsID" serial NOT NULL,
@@ -84,7 +83,6 @@ CREATE TABLE IF NOT EXISTS public.performance_metrics
 CREATE TABLE IF NOT EXISTS public.training_plans
 (
     "plansID" serial NOT NULL,
-    "usersID" integer NOT NULL,
     start_date date NOT NULL,
     end_date date NOT NULL,
     goal character varying(255) COLLATE pg_catalog."default",
@@ -94,17 +92,34 @@ CREATE TABLE IF NOT EXISTS public.training_plans
 CREATE TABLE IF NOT EXISTS public.training_sessions
 (
     "sessionsID" serial NOT NULL,
-    "usersID" integer NOT NULL,
-    date date NOT NULL,
-    duration interval NOT NULL,
-    type character varying COLLATE pg_catalog."default" NOT NULL,
+    "cyclistID" integer NOT NULL,  -- Adding cyclistID for the relationship
+    altitude_avg numeric,
+    altitude_max numeric,
+    altitude_min numeric,
+    altitudes text COLLATE pg_catalog."default",
+    ascent numeric,
+    calories numeric,
+    descent numeric,
+    distance numeric,
+    distances text COLLATE pg_catalog."default",
+    duration interval,
+    heartrates text COLLATE pg_catalog."default",
+    hr_avg integer,
+    hr_max integer,
+    hr_min integer,
+    positions text COLLATE pg_catalog."default",
+    speeds text COLLATE pg_catalog."default",
+    start_time timestamp,
+    steps integer,
+    timestamps text COLLATE pg_catalog."default",
+    total_distance numeric,
     CONSTRAINT training_sessions_pkey PRIMARY KEY ("sessionsID")
 );
 
 CREATE TABLE IF NOT EXISTS public.user_equipment
 (
     "user_equipmentID" serial NOT NULL,
-    "usersID" integer NOT NULL,
+    "cyclistID" integer NOT NULL,  -- Changing to cyclistID for consistency
     "equipmentID" integer NOT NULL,
     CONSTRAINT user_equipment_pkey PRIMARY KEY ("user_equipmentID")
 );
@@ -116,13 +131,11 @@ ALTER TABLE IF EXISTS public.api_integrations
     ON DELETE NO ACTION
     NOT VALID;
 
-
 ALTER TABLE IF EXISTS public.cyclists
     ADD CONSTRAINT fk_coach FOREIGN KEY ("coachID")
     REFERENCES public.coaches ("coachID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
-
 
 ALTER TABLE IF EXISTS public.memberships
     ADD CONSTRAINT "memberships_organizationsID_fkey" FOREIGN KEY ("organizationsID")
@@ -131,7 +144,6 @@ ALTER TABLE IF EXISTS public.memberships
     ON DELETE NO ACTION
     NOT VALID;
 
-
 ALTER TABLE IF EXISTS public.performance_metrics
     ADD CONSTRAINT "performance_metrics_sessionsID_fkey" FOREIGN KEY ("sessionsID")
     REFERENCES public.training_sessions ("sessionsID") MATCH SIMPLE
@@ -139,13 +151,17 @@ ALTER TABLE IF EXISTS public.performance_metrics
     ON DELETE NO ACTION
     NOT VALID;
 
+ALTER TABLE IF EXISTS public.training_sessions
+    ADD CONSTRAINT "training_sessions_cyclistID_fkey" FOREIGN KEY ("cyclistID")
+    REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 ALTER TABLE IF EXISTS public.user_equipment
-    ADD CONSTRAINT "user_equipment_cyclistID_fkey" FOREIGN KEY ("usersID")
+    ADD CONSTRAINT "user_equipment_cyclistID_fkey" FOREIGN KEY ("cyclistID")
     REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE;
-
 
 ALTER TABLE IF EXISTS public.user_equipment
     ADD CONSTRAINT "user_equipment_equipmentID_fkey" FOREIGN KEY ("equipmentID")
