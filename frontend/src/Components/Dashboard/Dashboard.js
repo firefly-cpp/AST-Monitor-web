@@ -16,7 +16,7 @@ const Dashboard = ({ role, token }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/auth/tcx-data', {
+        const response = await axios.get('http://localhost:5000/data_fetching/tcx-data', {
           headers: {
             Authorization: `Bearer ${token}`
           }
