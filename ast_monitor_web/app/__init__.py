@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from dotenv import load_dotenv
 from .auth import auth_bp
+from .dashboard.coach import coach_bp
 from .dashboard.data_fetching import data_bp
 from .models.database import db  # Corrected import
 import os
@@ -42,8 +43,13 @@ def create_app():
 
     mail.init_app(app)
 
-
+    # Apply CORS to specific Blueprints
+    CORS(auth_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
+    CORS(coach_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
+    CORS(data_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(data_bp, url_prefix='/data_fetching')
+    app.register_blueprint(coach_bp, url_prefix='/coach')
+
     return app

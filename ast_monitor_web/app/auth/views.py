@@ -59,11 +59,14 @@ def login():
     password = data.get('password')
     user = Coach.query.filter_by(username=username).first() or Cyclist.query.filter_by(username=username).first()
     if user and check_password_hash(user.password, password):
-        access_token = create_access_token(identity=username)
+        # Determine the user ID based on the type of user
+        user_id = user.coachID if isinstance(user, Coach) else user.cyclistID
+        access_token = create_access_token(identity=user_id)
         role = 'coach' if isinstance(user, Coach) else 'cyclist'
         return jsonify(access_token=access_token, role=role), 200
     else:
         return jsonify({"msg": "Invalid username or password"}), 401
+
 
 
 @auth_bp.route('/recover', methods=['POST'])

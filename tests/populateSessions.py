@@ -1,7 +1,7 @@
 import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from ast_monitor_web.app.models.activites import TrainingSession  # Assuming your models file and class names
+from ast_monitor_web.app.models.training_sessions_model import TrainingSession  # Assuming your models file and class names
 from datetime import datetime, timezone, timedelta
 
 # Connect to your database
@@ -39,10 +39,12 @@ def insert_data(data_list, cyclist_id):
             altitude_avg=data.get('altitude_avg'),
             altitude_max=data.get('altitude_max'),
             altitude_min=data.get('altitude_min'),
+            altitudes=json.dumps(data.get('altitudes')),  # Ensure altitudes is included
             ascent=data.get('ascent'),
             descent=data.get('descent'),
             calories=data.get('calories'),
             distance=data.get('distance'),
+            distances=json.dumps(data.get('distances')),  # Ensure distances is included
             duration=duration_interval,
             heartrates=json.dumps(data.get('heartrates')),
             hr_avg=data.get('hr_avg'),
@@ -60,11 +62,10 @@ def insert_data(data_list, cyclist_id):
     session.commit()
     session.close()
 
-
 # Usage Example
-data_file = 'C:/Users/Vanja/Desktop/Sport5Rider3.json'
+data_file = 'C:/Users/Vanja/Desktop/Projekt/Sport5Rider4.json'
 data_list = load_json_data(data_file)
-insert_data(data_list, cyclist_id=1)
+insert_data(data_list, cyclist_id=2)
 
 # Commit the session to save your data to the database
 session.commit()

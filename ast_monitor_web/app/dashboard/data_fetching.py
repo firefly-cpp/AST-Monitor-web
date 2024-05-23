@@ -1,7 +1,7 @@
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sport_activities_features import TCXFile
-from ..models.activites import db, TrainingSession
+from ..models.training_sessions_model import db, TrainingSession
 
 data_bp = Blueprint('data_bp', __name__)
 
@@ -32,32 +32,4 @@ def get_tcx_data():
     return jsonify(detailed_data)
 
 
-@data_bp.route('/upload_training_data', methods=['POST'])
-@jwt_required()
-def upload_training_data():
-    current_user_id = get_jwt_identity()  # Assuming the identity is the ID
-    data = request.get_json()
 
-    new_session = TrainingSession(
-        cyclistID=data['cyclistID'],
-        altitude_avg=data['altitude_avg'],
-        altitude_max=data['altitude_max'],
-        altitude_min=data['altitude_min'],
-        ascent=data['ascent'],
-        descent=data['descent'],
-        calories=data['calories'],
-        distance=data['distance'],
-        durations=data['duration'],
-        hr_avg=data['hr_avg'],
-        hr_max=data['hr_max'],
-        hr_min=data['hr_min'],
-        positions=data['positions'],
-        speeds=data['speeds'],
-        start_time=data['start_time'],
-        steps=data['steps'],
-        timestamps=data['timestamps'],
-        total_distance=data['total_distance'],
-    )
-    db.session.add(new_session)
-    db.session.commit()
-    return jsonify({'message': 'Training data uploaded successfully'}), 201

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Authentication/Login';
 import Register from './Components/Authentication/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
+import CoachDashboard from './Components/Dashboard/Coach/CoachDashboard'; // Import CoachDashboard
 import ResetPassword from './Components/Authentication/ResetPassword';
 import HomePage from './Components/HomePage';
 import Navbar from './Components/Navbar/Navbar';
@@ -12,7 +13,10 @@ import EditProfile from './Components/Authentication/EditProfile';
 import PasswordRecovery from './Components/Authentication/PasswordRecovery';
 
 const App = () => {
-  const [auth, setAuth] = useState({ token: localStorage.getItem('token') || '', role: localStorage.getItem('role') || '' });
+  const [auth, setAuth] = useState({
+    token: localStorage.getItem('token') || '',
+    role: localStorage.getItem('role') || ''
+  });
 
   const handleLogin = (token, role) => {
     localStorage.setItem('token', token);
@@ -43,10 +47,14 @@ const App = () => {
             </>
           ) : (
             <>
-              <Route path="/dashboard/*" element={<Dashboard role={auth.role} token={auth.token} />} />
+              {auth.role === 'coach' ? (
+                <Route path="/dashboard/*" element={<CoachDashboard token={auth.token} />} />
+              ) : (
+                <Route path="/dashboard/*" element={<Dashboard role={auth.role} token={auth.token} />} />
+              )}
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/edit-profile" element={<EditProfile />} />
-              <Route path="*" element={<Navigate to="/dashboard/calendar" />} />
+              <Route path="*" element={<Navigate to={auth.role === 'coach' ? "/dashboard/overview" : "/dashboard/calendar"} />} />
             </>
           )}
         </Routes>
