@@ -1,4 +1,4 @@
-// App.js
+// src/App.js
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Authentication/Login';
@@ -9,7 +9,7 @@ import HomePage from './Components/HomePage';
 import Navbar from './Components/Navbar/Navbar';
 import UserProfile from './Components/Authentication/UserProfile';
 import EditProfile from './Components/Authentication/EditProfile';
-import PasswordRecovery from "./Components/Authentication/PasswordRecovery";
+import PasswordRecovery from './Components/Authentication/PasswordRecovery';
 
 const App = () => {
   const [auth, setAuth] = useState({ token: localStorage.getItem('token') || '', role: localStorage.getItem('role') || '' });
@@ -32,25 +32,24 @@ const App = () => {
         <Navbar isLoggedIn={!!auth.token} handleLogout={handleLogout} />
 
         <Routes>
-  {!auth.token ? (
-    <>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<Login onLogin={handleLogin} />} />
-      <Route path="/register" element={<Register onRegister={handleLogin} />} />
-      <Route path="/reset-password/:token" element={<ResetPassword />} />
-      <Route path="/recover" element={<PasswordRecovery />} />  {/* Add this line */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </>
-  ) : (
-    <>
-      <Route path="/dashboard" element={<Dashboard role={auth.role} />} />
-      <Route path="/profile" element={<UserProfile />} />
-      <Route path="/edit-profile" element={<EditProfile />} />
-      <Route path="*" element={<Navigate to="/dashboard" />} />
-    </>
-  )}
-</Routes>
-
+          {!auth.token ? (
+            <>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login onLogin={handleLogin} />} />
+              <Route path="/register" element={<Register onRegister={handleLogin} />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/recover" element={<PasswordRecovery />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </>
+          ) : (
+            <>
+              <Route path="/dashboard/*" element={<Dashboard role={auth.role} token={auth.token} />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/edit-profile" element={<EditProfile />} />
+              <Route path="*" element={<Navigate to="/dashboard/calendar" />} />
+            </>
+          )}
+        </Routes>
       </div>
     </BrowserRouter>
   );

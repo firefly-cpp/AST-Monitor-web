@@ -8,7 +8,7 @@
   width: 100%;
   height: 10%; /* Set a fixed height */
   display: flex;
-  justify-content: center; /* Center the navbar */
+  justify-content: center;
   align-items: center;
   padding: 10px 0;
   box-shadow: 0 4px 8px rgba(27, 19, 19, 0.3);

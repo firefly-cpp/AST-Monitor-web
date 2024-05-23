@@ -3,7 +3,6 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from sport_activities_features import TCXFile
 from ..models.activites import db, TrainingSession
 
-
 data_bp = Blueprint('data_bp', __name__)
 
 @data_bp.route('/tcx-data', methods=['GET'])
@@ -24,12 +23,13 @@ def get_tcx_data():
         "total_ascent": total_ascent,
         "total_descent": total_descent,
         "average_speed": average_speed,
-        "average_heart_rate": average_heart_rate
+        "average_heart_rate": average_heart_rate,
+        "speeds": data.get('speeds', []),
+        "heartrates": data.get('heartrates', []),
+        "timestamps": data.get('timestamps', [])
     }
 
     return jsonify(detailed_data)
-
-
 
 
 @data_bp.route('/upload_training_data', methods=['POST'])
