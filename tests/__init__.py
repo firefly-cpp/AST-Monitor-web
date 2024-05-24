@@ -32,5 +32,5 @@ def extract_keys_from_json(file_path):
 
 if __name__ == "__main__":
     # Replace 'your_file.json' with the path to your JSON file
-    json_file_path = 'C:/Users/Vanja/Desktop/Sport5Rider3.json'
+    json_file_path = 'C:/Users/Korisnik/Downloads/Sport5Rider3.json'
     extract_keys_from_json(json_file_path)

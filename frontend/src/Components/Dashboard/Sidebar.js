@@ -22,6 +22,9 @@ const Sidebar = ({ role }) => {
             <li>
               <NavLink to="/dashboard/health">Health Monitoring</NavLink>
             </li>
+            <li>
+              <NavLink to="/dashboard/hill-data">Hill Data</NavLink>
+            </li> 
           </>
         )}
       </ul>
