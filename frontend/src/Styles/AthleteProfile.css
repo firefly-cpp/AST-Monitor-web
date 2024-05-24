@@ -1,29 +1,10 @@
 /* src/Styles/AthleteProfile.css */
-
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Roboto', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-image: url('../../../photos/velosipedist-sportsmen-gory-priroda-doroga-road-bike.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
 .athlete-profile-container {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  padding-top: 60px; /* Adjust padding to ensure content starts below the navbar */
   overflow: auto;
-  margin-top: 1600px;
 }
 
 .athlete-profile {
@@ -33,22 +14,11 @@ body {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 1200px;
-  margin: 20px auto; /* Adjust margin */
+  margin: 20px auto;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: fadeIn 1s ease-in-out;
-  overflow: hidden; /* Hide overflow to prevent graph overlap */
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  overflow: hidden;
 }
 
 .athlete-profile:hover {
@@ -69,13 +39,9 @@ body {
   color: #555;
 }
 
-.recharts-wrapper {
-  margin: 20px auto;
-}
-
 .chart-container {
   width: 100%;
-  max-width: 3000px ;
+  max-width: 3000px;
   margin: 0 auto 20px auto;
 }
 
@@ -83,4 +49,3 @@ body {
   width: 100% !important;
   height: 500px !important;
 }
-
