@@ -1,3 +1,4 @@
+// src/Components/Authentication/EditProfile.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -12,33 +13,32 @@ const EditProfile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-  const fetchProfile = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    try {
-      const response = await axios.get('http://localhost:5000/auth/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = response.data;
-      setUsername(data.username);
-      setRole(localStorage.getItem('role'));  // Get the role from localStorage
-      if (data.role === 'cyclist') {
-        setDateOfBirth(data.date_of_birth || '');
-        setHeight(data.height_cm || '');
-        setWeight(data.weight_kg || '');
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error.response?.data);
-      navigate('/login');
-    }
-  };
+      try {
+        const response = await axios.get('http://localhost:5000/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = response.data;
+        setUsername(data.username);
+        setRole(localStorage.getItem('role'));  // Get the role from localStorage
+        if (data.role === 'cyclist') {
+          setDateOfBirth(data.date_of_birth || '');
+          setHeight(data.height_cm || '');
+          setWeight(data.weight_kg || '');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error.response?.data);
+        navigate('/login');
+      }
+    };
 
-  fetchProfile();
-}, [navigate]);
-
+    fetchProfile();
+  }, [navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -65,33 +65,35 @@ const EditProfile = () => {
   };
 
   return (
-  <div className="edit-profile-container">
-    <h3>Edit Profile</h3>
-    <form onSubmit={handleSubmit}>
-      <label>
-        Username:
-        <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
-      </label>
-      {role === 'cyclist' && (
-        <>
+    <div className="edit-profile-page">
+      <div className="edit-profile-container">
+        <h3>Edit Profile</h3>
+        <form onSubmit={handleSubmit}>
           <label>
-            Date of Birth:
-            <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+            Username:
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
           </label>
-          <label>
-            Height (cm):
-            <input type="number" value={height} onChange={e => setHeight(e.target.value)} />
-          </label>
-          <label>
-            Weight (kg):
-            <input type="number" value={weight} onChange={e => setWeight(e.target.value)} />
-          </label>
-        </>
-      )}
-      <button type="submit">Update Profile</button>
-    </form>
-  </div>
-);
+          {role === 'cyclist' && (
+            <>
+              <label>
+                Date of Birth:
+                <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+              </label>
+              <label>
+                Height (cm):
+                <input type="number" value={height} onChange={e => setHeight(e.target.value)} />
+              </label>
+              <label>
+                Weight (kg):
+                <input type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+              </label>
+            </>
+          )}
+          <button type="submit">Update Profile</button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default EditProfile;

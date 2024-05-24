@@ -23,6 +23,7 @@ SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
 # Generate a random JWT secret key
 JWT_SECRET_KEY = secrets.token_urlsafe(32)
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
@@ -38,16 +39,14 @@ def create_app():
     app.config['MAIL_DEBUG'] = True
 
     db.init_app(app)
-    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-    jwt = JWTManager(app)
 
+    # Allow CORS for all routes and origins
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
+    jwt = JWTManager(app)
     mail.init_app(app)
 
-    # Apply CORS to specific Blueprints
-    CORS(auth_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
-    CORS(coach_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
-    CORS(data_bp, resources={r"/*": {"origins": "http://localhost:3000"}})
-
+    # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(data_bp, url_prefix='/data_fetching')
     app.register_blueprint(coach_bp, url_prefix='/coach')

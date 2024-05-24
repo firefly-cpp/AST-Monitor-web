@@ -59,13 +59,16 @@ def login():
     password = data.get('password')
     user = Coach.query.filter_by(username=username).first() or Cyclist.query.filter_by(username=username).first()
     if user and check_password_hash(user.password, password):
-        # Determine the user ID based on the type of user
         user_id = user.coachID if isinstance(user, Coach) else user.cyclistID
-        access_token = create_access_token(identity=user_id)
         role = 'coach' if isinstance(user, Coach) else 'cyclist'
+        # Include both user ID and role in the JWT identity
+        identity = {'user_id': user_id, 'role': role}
+        access_token = create_access_token(identity=identity)
         return jsonify(access_token=access_token, role=role), 200
     else:
         return jsonify({"msg": "Invalid username or password"}), 401
+
+
 
 
 
@@ -108,9 +111,15 @@ def reset_with_token(token):
 @auth_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
-    current_username = get_jwt_identity()
-    user = Coach.query.filter_by(username=current_username).first() or Cyclist.query.filter_by(
-        username=current_username).first()
+    identity = get_jwt_identity()
+    user_id = identity['user_id']
+    role = identity['role']
+
+    if role == 'coach':
+        user = Coach.query.filter_by(coachID=user_id).first()
+    else:
+        user = Cyclist.query.filter_by(cyclistID=user_id).first()
+
     if not user:
         return jsonify({"message": "User not found"}), 404
     return jsonify(user.to_dict()), 200

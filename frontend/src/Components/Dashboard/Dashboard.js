@@ -8,7 +8,6 @@ import HealthMonitoring from './HealthMonitoring';
 import HillData from './HillData'; // Import the new component
 import CoachDashboard from './Coach/CoachDashboard';
 import '../../Styles/Dashboard.css';
-
 const Dashboard = ({ role, token }) => {
   return (
     <div className="dashboard">

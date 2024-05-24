@@ -1,11 +1,10 @@
 /* src/Styles/Dashboard.css */
-
 .dashboard {
-  margin-top: 10%; /* Adjust for the height of the navbar */
+  margin-top: 60px; /* Adjust for the height of the navbar */
   font-family: Arial, sans-serif;
   display: flex;
-  min-height: 100vh; /* Ensure the dashboard takes full height */
-  overflow: hidden; /* Prevents overflow of the dashboard container */
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 .calendar-container, .map-container, .performance-analytics, .health-monitoring, .training-progress {
@@ -15,10 +14,10 @@
   border-radius: 8px;
   background-color: #f9f9f9;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  flex: 1; /* Ensure the containers take available space */
-  max-width: 100%; /* Make sure they don't exceed the container */
-  overflow: auto; /* Make sure these elements are scrollable if content overflows */
-  min-height: 90vh; /* Ensure the dashboard takes full height */
+  flex: 1;
+  max-width: 100%;
+  overflow: auto;
+  min-height: 90vh;
 }
 
 h1 {
@@ -54,12 +53,12 @@ h2 {
 }
 
 .performance-analytics .chart-wrapper {
-  width: 48%; /* Ensures the two charts are side by side with some space in between */
+  width: 48%;
 }
 
 .performance-analytics .chart-wrapper canvas {
   width: 100% !important;
-  height: 500px !important; /* Increase the height of the charts */
+  height: 500px !important;
 }
 
 .analytics-details {
@@ -68,10 +67,9 @@ h2 {
   text-align: center;
 }
 
-/* Additional responsive design adjustments */
 @media (max-width: 768px) {
   .dashboard {
-    margin-top: 20px;
+    margin-top: 60px;
     flex-direction: column;
   }
 
@@ -94,14 +92,13 @@ h2 {
   }
 }
 
-/* Sidebar Styles */
 .sidebar {
   width: 15%;
-  height: calc(100vh - 10%); /* Full height of the viewport minus the navbar height */
+  height: calc(100vh - 60px);
   background-color: #f4f4f4;
   padding: 15px;
   position: fixed;
-  top: 10%; /* Start below the navbar */
+  top: 60px;
   left: 0;
   overflow-y: auto;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -132,9 +129,9 @@ h2 {
 }
 
 .content {
-  margin-left: 15%; /* Width of the sidebar */
+  margin-left: 15%;
   padding: 20px;
-  width: 85%; /* Remaining width */
-  margin-top: 10%; /* Ensure content is pushed down below the navbar */
-  overflow-y: auto; /* Ensure content is scrollable */
+  width: 85%;
+  margin-top: 60px;
+  overflow-y: auto;
 }

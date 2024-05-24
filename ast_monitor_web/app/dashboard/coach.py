@@ -11,8 +11,14 @@ coach_bp = Blueprint('coach_bp', __name__)
 @coach_bp.route('/athletes', methods=['GET'])
 @jwt_required()
 def get_athletes():
-    current_user_id = get_jwt_identity()
-    logging.info(f"Current user ID: {current_user_id}")
+    identity = get_jwt_identity()
+    current_user_id = identity['user_id']  # Get user ID from the identity dictionary
+    current_user_role = identity['role']  # Get role from the identity dictionary
+
+    logging.info(f"Current user ID: {current_user_id}, Role: {current_user_role}")
+
+    if current_user_role != 'coach':
+        return jsonify({"message": "Access denied"}), 403
 
     coach = Coach.query.filter_by(coachID=current_user_id).first()
     if not coach:
@@ -44,24 +50,18 @@ def get_athletes():
             Cyclist.coachID == current_user_id
         ).all()
 
-        athlete_data = []
-        for athlete in athletes:
-            last_session = None
-            if athlete.last_session_time:
-                last_session = {
-                    "time": athlete.last_session_time.isoformat(),
-                    "altitude_avg": float(athlete.altitude_avg) if athlete.altitude_avg is not None else None,
-                    "calories": int(athlete.calories) if athlete.calories is not None else None,
-                    "duration": athlete.duration.total_seconds() if athlete.duration else 0,
-                    "hr_avg": athlete.hr_avg if athlete.hr_avg is not None else None,
-                    "total_distance": float(athlete.total_distance) if athlete.total_distance is not None else None
-                }
-
-            athlete_data.append({
-                "cyclistID": athlete.cyclistID,
-                "username": athlete.username,
-                "last_session": last_session
-            })
+        athlete_data = [{
+            "cyclistID": athlete.cyclistID,
+            "username": athlete.username,
+            "last_session": {
+                "time": athlete.last_session_time.isoformat() if athlete.last_session_time else None,
+                "altitude_avg": float(athlete.altitude_avg) if athlete.altitude_avg is not None else None,
+                "calories": int(athlete.calories) if athlete.calories is not None else None,
+                "duration": athlete.duration.total_seconds() if athlete.duration else 0,
+                "hr_avg": athlete.hr_avg if athlete.hr_avg is not None else None,
+                "total_distance": float(athlete.total_distance) if athlete.total_distance is not None else None
+            } if athlete.last_session_time else None
+        } for athlete in athletes]
 
         return jsonify(athlete_data)
     except Exception as e:

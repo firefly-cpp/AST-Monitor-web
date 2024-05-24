@@ -1,7 +1,8 @@
+// src/Components/Authentication/UserProfile.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import '../../Styles/UserProfile.css'; // Ensure the CSS file path is correct
+import '../../Styles/UserProfile.css';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -10,7 +11,6 @@ const UserProfile = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error("No token found, redirecting to login");
       navigate('/login');
       return;
     }
@@ -22,8 +22,7 @@ const UserProfile = () => {
         });
         setProfile(response.data);
       } catch (error) {
-        console.error('Error fetching profile:', error.response?.data);
-        navigate('/login'); // Redirect on failure to fetch profile
+        navigate('/login');
       }
     };
 
@@ -35,39 +34,41 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="profile-container">
-      <h3>User Profile</h3>
-      <table>
-        <tbody>
-          <tr>
-            <th>Username</th>
-            <td>{profile.username}</td>
-          </tr>
-          <tr>
-            <th>Email</th>
-            <td>{profile.email}</td>
-          </tr>
-          {profile.date_of_birth && (
+    <div className="profile-page">
+      <div className="profile-container">
+        <h3>User Profile</h3>
+        <table>
+          <tbody>
             <tr>
-              <th>Date of Birth</th>
-              <td>{profile.date_of_birth}</td>
+              <th>Username</th>
+              <td>{profile.username}</td>
             </tr>
-          )}
-          {profile.height_cm && (
             <tr>
-              <th>Height</th>
-              <td>{profile.height_cm} cm</td>
+              <th>Email</th>
+              <td>{profile.email}</td>
             </tr>
-          )}
-          {profile.weight_kg && (
-            <tr>
-              <th>Weight</th>
-              <td>{profile.weight_kg} kg</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      <button onClick={() => navigate('/edit-profile')}>Edit Profile</button>
+            {profile.date_of_birth && (
+              <tr>
+                <th>Date of Birth</th>
+                <td>{profile.date_of_birth}</td>
+              </tr>
+            )}
+            {profile.height_cm && (
+              <tr>
+                <th>Height</th>
+                <td>{profile.height_cm} cm</td>
+              </tr>
+            )}
+            {profile.weight_kg && (
+              <tr>
+                <th>Weight</th>
+                <td>{profile.weight_kg} kg</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <button onClick={() => navigate('/edit-profile')}>Edit Profile</button>
+      </div>
     </div>
   );
 };
