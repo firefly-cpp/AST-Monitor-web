@@ -7,7 +7,6 @@ import '../../Styles/EditProfile.css';
 const EditProfile = () => {
   const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const navigate = useNavigate();
@@ -27,7 +26,6 @@ const EditProfile = () => {
         setUsername(data.username);
         setRole(localStorage.getItem('role'));  // Get the role from localStorage
         if (data.role === 'cyclist') {
-          setDateOfBirth(data.date_of_birth || '');
           setHeight(data.height_cm || '');
           setWeight(data.weight_kg || '');
         }
@@ -46,14 +44,13 @@ const EditProfile = () => {
     const updateData = {
       username,
       ...(role === 'cyclist' && {
-        date_of_birth: dateOfBirth,
         height_cm: height,
         weight_kg: weight
       })
     };
 
     try {
-      const response = await axios.put('http://localhost:5000/auth/profile', updateData, {
+      await axios.put('http://localhost:5000/auth/profile', updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Profile updated successfully');
@@ -75,10 +72,6 @@ const EditProfile = () => {
           </label>
           {role === 'cyclist' && (
             <>
-              <label>
-                Date of Birth:
-                <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
-              </label>
               <label>
                 Height (cm):
                 <input type="number" value={height} onChange={e => setHeight(e.target.value)} />

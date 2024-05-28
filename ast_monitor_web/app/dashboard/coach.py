@@ -8,6 +8,7 @@ from ..models.usermodel import db, Coach, Cyclist
 
 coach_bp = Blueprint('coach_bp', __name__)
 
+
 @coach_bp.route('/athletes', methods=['GET'])
 @jwt_required()
 def get_athletes():
@@ -69,7 +70,6 @@ def get_athletes():
         return jsonify({"error": "Error processing data"}), 500
 
 
-
 @coach_bp.route('/athlete/<int:id>', methods=['GET'])
 @jwt_required()
 def get_athlete_profile(id):
@@ -99,7 +99,8 @@ def get_athlete_profile(id):
                 "altitudes": json.loads(session.altitudes),
                 "heartrates": json.loads(session.heartrates),
                 "speeds": json.loads(session.speeds),
-                "start_time": session.start_time.isoformat()
+                "start_time": session.start_time.isoformat(),
+                "positions": json.loads(session.positions) if session.positions else []
             })
 
         # Debug output
@@ -116,3 +117,13 @@ def get_athlete_profile(id):
         return jsonify({"error": "Error fetching athlete profile"}), 500
 
 
+@coach_bp.route('/athlete/sessions/<int:id>', methods=['GET'])
+@jwt_required()
+def get_sessions_for_calendar(id):
+    sessions = TrainingSession.query.filter_by(cyclistID=id).order_by(TrainingSession.start_time).all()
+    session_dates = [{
+        "sessionID": session.sessionsID,
+        "start_time": session.start_time.isoformat()
+    } for session in sessions]
+
+    return jsonify(session_dates)

@@ -1,3 +1,4 @@
+// src/Components/Authentication/ResetPassword.js
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -16,7 +17,7 @@ const PasswordReset = () => {
       return;
     }
     try {
-      const response = await axios.post(`http://localhost:5000/auth/reset/${token}`, {
+      await axios.post(`http://localhost:5000/auth/reset/${token}`, {
         password
       });
       alert('Password reset successfully!');

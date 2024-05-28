@@ -5,7 +5,6 @@ import Sidebar from './Sidebar';
 import TrainingCalendar from './TrainingCalendar';
 import PerformanceAnalytics from './PerformanceAnalytics';
 import HealthMonitoring from './HealthMonitoring';
-import CoachDashboard from './Coach/CoachDashboard';
 import AthleteOverview from './Coach/AthleteOverview';
 import AthleteProfile from './Coach/AthleteProfile';
 import '../../Styles/Dashboard.css';

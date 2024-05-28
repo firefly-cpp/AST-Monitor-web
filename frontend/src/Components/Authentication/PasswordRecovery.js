@@ -1,4 +1,4 @@
-//PasswordRecovery.js
+// src/Components/Authentication/PasswordRecovery.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,7 @@ const PasswordRecovery = () => {
   const handleRequestReset = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/auth/recover', { email });
+      await axios.post('http://localhost:5000/auth/recover', { email });
       alert('If that email address is in our database, we will send you an email to reset your password.');
       navigate('/login');  // Redirect to login after request
     } catch (error) {

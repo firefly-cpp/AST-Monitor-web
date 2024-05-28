@@ -26,6 +26,7 @@ def register_coach():
         db.session.rollback()
         return jsonify({'message': 'Registration failed, username or email already exists'}), 409
 
+
 @auth_bp.route('/register_cyclist', methods=['POST'])
 def register_cyclist():
     data = request.get_json()
@@ -67,9 +68,6 @@ def login():
         return jsonify(access_token=access_token, role=role), 200
     else:
         return jsonify({"msg": "Invalid username or password"}), 401
-
-
-
 
 
 @auth_bp.route('/recover', methods=['POST'])
@@ -128,19 +126,33 @@ def get_profile():
 @auth_bp.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    current_username = get_jwt_identity()
-    user = Coach.query.filter_by(username=current_username).first() or Cyclist.query.filter_by(
-        username=current_username).first()
+    identity = get_jwt_identity()  # Extract the identity from the JWT
+    user_id = identity['user_id']
+    role = identity['role']
+
+    # Find the user by role and user ID
+    if role == 'coach':
+        user = Coach.query.filter_by(coachID=user_id).first()
+    else:
+        user = Cyclist.query.filter_by(cyclistID=user_id).first()
+
     if not user:
         return jsonify({"message": "User not found"}), 404
+
     data = request.get_json()
     user.username = data.get('username', user.username)
-    if isinstance(user, Cyclist):
-        user.date_of_birth = data.get('date_of_birth', user.date_of_birth)
-        user.height_cm = data.get('height_cm', user.height_cm)
-        user.weight_kg = data.get('weight_kg', user.weight_kg)
+
+    # If the user is a Cyclist, update additional fields
+    if role == 'cyclist':
+        if 'height_cm' in data:
+            user.height_cm = data['height_cm']
+        if 'weight_kg' in data:
+            user.weight_kg = data['weight_kg']
+
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"}), 200
+
+
 
 
 # Fetch all coaches:
@@ -151,4 +163,3 @@ def get_all_coaches():
         return jsonify([coach.to_dict() for coach in coaches]), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
-
