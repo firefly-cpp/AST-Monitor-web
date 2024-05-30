@@ -5,8 +5,9 @@ from flask_mail import Mail
 from dotenv import load_dotenv
 from .auth import auth_bp
 from .dashboard.coach import coach_bp
+from .dashboard.cyclist import cyclist_bp
 from .dashboard.data_fetching import data_bp
-from .models.database import db  # Corrected import
+from .models.database import db
 import os
 import secrets
 
@@ -50,5 +51,6 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(data_bp, url_prefix='/data_fetching')
     app.register_blueprint(coach_bp, url_prefix='/coach')
+    app.register_blueprint(cyclist_bp, url_prefix='/cyclist')
 
     return app

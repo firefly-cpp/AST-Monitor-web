@@ -9,6 +9,7 @@ import HillData from './HillData'; // Import the new component
 import AthleteOverview from './Coach/AthleteOverview';
 import AthleteProfile from './Coach/AthleteProfile';
 import '../../Styles/Dashboard.css';
+import HistoryCalendar from "./HistoryCalendar";
 
 const Dashboard = ({role, token}) => {
     return (
@@ -24,7 +25,9 @@ const Dashboard = ({role, token}) => {
                         </>
                     ) : (
                         <>
-                            <Route path="/calendar" element={<TrainingCalendar token={token}/>}/>
+                            {/*<Route path="/calendar" element={<TrainingCalendar token={token}/>}/>*/}
+                            <Route path="/calendar" element={<HistoryCalendar token={token}/>}/>
+                            <Route path="/calendar/:sessionId" element={<HistoryCalendar token={token}/>}/>
                             <Route path="/performance" element={<PerformanceAnalytics token={token}/>}/>
                             <Route path="/health" element={<HealthMonitoring token={token}/>}/>
                             <Route path="/hill-data" element={<HillData token={token}/>}/>
