@@ -1,3 +1,5 @@
+import os
+
 from flask import request, jsonify, Blueprint, url_for, redirect, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -81,7 +83,7 @@ def recover():
     serializer = URLSafeTimedSerializer(current_app.config['JWT_SECRET_KEY'])
     token = serializer.dumps(email, salt='email-recover')
     link = url_for('auth_bp.reset_with_token', token=token, _external=True)
-    msg = Message('Password Reset', sender='your-email@example.com', recipients=[email])
+    msg = Message('Password Reset', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
     msg.body = f'Your link to reset password is {link}'
     mail.send(msg)
     return jsonify({"message": "If your email is in our database, you will receive a password recovery link."}), 200

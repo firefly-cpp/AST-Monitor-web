@@ -8,9 +8,14 @@ const Sidebar = ({role}) => {
             <h2>Dashboard</h2>
             <ul>
                 {role === 'coach' ? (
-                    <li>
-                        <NavLink to="/dashboard/coach/overview">Athlete Overview</NavLink>
-                    </li>
+                     <>
+                        <li>
+                            <NavLink to="/dashboard/overview">Athlete Overview</NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/dashboard/create-plan">Create Training Plan</NavLink> {/* New Link */}
+                        </li>
+                    </>
                 ) : (
                     <>
                         {/*<li>*/}

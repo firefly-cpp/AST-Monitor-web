@@ -1,0 +1,131 @@
+/* src/Styles/CreateTrainingPlan.css */
+.create-training-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 750px;
+  margin: 20px auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.create-training-plan h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.create-training-plan form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.create-training-plan .form-label {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 350px; /* Set maximum width for labels */
+}
+
+.create-training-plan .form-input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  width: 100%; /* Set width of inputs to 100% of the parent label */
+  box-sizing: border-box;
+}
+
+.create-training-plan .form-fieldset {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px; /* Set maximum width for fieldsets */
+}
+
+.create-training-plan legend {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.create-training-plan .form-checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.create-training-plan .form-checkbox-label input[type="checkbox"] {
+  margin-right: 10px;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.create-training-plan .form-checkbox-label span {
+  margin-left: 10px;
+}
+
+.create-training-plan .submit-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.create-training-plan .submit-button:hover {
+  background-color: #45a049;
+}
+
+.create-training-plan .cyclist-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.create-training-plan .cyclist-item {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.create-training-plan .cyclist-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.create-training-plan .cyclist-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.create-training-plan .cyclist-item span {
+  font-size: 16px;
+  color: #333;
+}
