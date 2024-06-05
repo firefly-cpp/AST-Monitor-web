@@ -1,12 +1,19 @@
 import json
 import logging
-from flask import jsonify, Blueprint
+import os
+
+from flask_mail import Mail, Message
+from datetime import datetime, timedelta
+from flask import jsonify, Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, and_
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Coach, Cyclist
+from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan
+
 
 coach_bp = Blueprint('coach_bp', __name__)
+
 
 
 @coach_bp.route('/athletes', methods=['GET'])
@@ -127,3 +134,86 @@ def get_sessions_for_calendar(id):
     } for session in sessions]
 
     return jsonify(session_dates)
+
+
+
+
+@coach_bp.route('/create_training_plan', methods=['POST'])
+@jwt_required()
+def create_training_plan():
+    data = request.get_json()
+    coach_id = get_jwt_identity()['user_id']
+
+    # Try parsing with seconds
+    try:
+        start_time = datetime.strptime(data['start_time'], "%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        # Fallback to parsing without seconds
+        start_time = datetime.strptime(data['start_time'], "%Y-%m-%dT%H:%M")
+
+    # Ensure duration is an integer
+    try:
+        duration_minutes = int(data['duration'])
+    except ValueError:
+        return jsonify({"error": "Duration must be an integer"}), 400
+
+    duration = timedelta(minutes=duration_minutes)
+    total_distance = data['total_distance']
+    hr_avg = data.get('hr_avg')
+    altitude_avg = data.get('altitude_avg')
+    altitude_max = data.get('altitude_max')
+    calories = data.get('calories')
+    ascent = data.get('ascent')
+    descent = data.get('descent')
+    cyclist_ids = data['cyclist_ids']
+
+    try:
+        # Create the training plan
+        training_plan = TrainingPlan(
+            coachID=coach_id,
+            start_time=start_time,
+            duration=duration,
+            total_distance=total_distance,
+            hr_avg=hr_avg,
+            altitude_avg=altitude_avg,
+            altitude_max=altitude_max,
+            calories=calories,
+            ascent=ascent,
+            descent=descent
+        )
+        db.session.add(training_plan)
+        db.session.commit()
+
+        # Associate training plan with cyclists
+        for cyclist_id in cyclist_ids:
+            cyclist_training_plan = CyclistTrainingPlan(
+                cyclistID=cyclist_id,
+                plansID=training_plan.plansID
+            )
+            db.session.add(cyclist_training_plan)
+            cyclist = Cyclist.query.get(cyclist_id)
+            if cyclist:
+                send_training_plan_email(cyclist.email, training_plan)
+
+        db.session.commit()
+
+        return jsonify({"message": "Training plan created successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error creating training plan: {str(e)}")
+        return jsonify({"error": "Error creating training plan"}), 500
+
+def send_training_plan_email(cyclist_email, training_plan):
+    from ..__init__ import mail
+    msg = Message(
+        subject="New Training Plan",
+        sender=os.getenv('MAIL_USERNAME'),
+        recipients=[cyclist_email]
+    )
+    msg.body = (
+        f"A new training plan has been created for you.\n"
+        f"Start Time: {training_plan.start_time}\n"
+        f"Duration: {training_plan.duration}\n"
+        f"Please log in to view the full details."
+    )
+    mail.send(msg)
