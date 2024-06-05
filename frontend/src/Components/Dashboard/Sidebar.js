@@ -18,21 +18,16 @@ const Sidebar = ({role}) => {
                     </>
                 ) : (
                     <>
-                        {/*<li>*/}
-                        {/*    <NavLink to="/dashboard/calendar">Training Calendar</NavLink>*/}
-                        {/*</li>*/}
                         <li>
                             <NavLink to="/dashboard/performance">Performance Analytics</NavLink>
                         </li>
                         <li>
-                            <NavLink to="/dashboard/health">Health Monitoring</NavLink>
-                        </li>
-                        <li>
-                            <NavLink to="/dashboard/hill-data">Hill Data</NavLink>
-                        </li>
-                        <li>
                             <NavLink to="/dashboard/history">Training History</NavLink>
                         </li>
+                        <li>
+                            <NavLink to="/dashboard/health">Health Monitoring</NavLink>
+                        </li>
+                        
                     </>
                 )}
             </ul>
