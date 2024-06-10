@@ -6,13 +6,12 @@ import Calendar from 'react-calendar';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'chart.js/auto';
-import 'react-calendar/dist/Calendar.css';  // Import the Calendar CSS
-import 'leaflet/dist/leaflet.css'; // Leaflet CSS
-import '../../../Styles/AthleteProfile.css'; // Import the CSS file for styling
+import 'react-calendar/dist/Calendar.css';
+import 'leaflet/dist/leaflet.css';
+import '../../../Styles/AthleteProfile.css';
 
-// Custom icons
 const startIcon = new L.Icon({
-    iconUrl: 'https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png', // Replace with the path to your custom start icon
+    iconUrl: 'https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -20,7 +19,7 @@ const startIcon = new L.Icon({
 });
 
 const endIcon = new L.Icon({
-    iconUrl: 'https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png', // Replace with the path to your custom end icon
+    iconUrl: 'https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -42,7 +41,7 @@ const AthleteProfile = ({ token }) => {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(response => {
-            console.log('Athlete Data:', response.data); // Debug log
+            console.log('Athlete Data:', response.data);
             setAthleteData(response.data);
             setLoading(false);
         })
@@ -58,7 +57,68 @@ const AthleteProfile = ({ token }) => {
             new Date(session.start_time).toDateString() === value.toDateString()
         );
         setSelectedSession(selected);
+        console.log('Selected Session:', selected); // Debug log
     };
+
+    const generatePDFReport = (selectedSession, token) => {
+        if (!selectedSession) {
+            console.error('No session selected');
+            return;
+        }
+
+        console.log('Generating PDF for Session ID:', selectedSession.sessionsID); // Debug log
+
+        axios.get(`http://localhost:5000/import_export/athlete/session/${selectedSession.sessionsID}/export_pdf`, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+        })
+        .then(response => {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `session_report_${new Date(selectedSession.start_time).toLocaleDateString()}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+        })
+        .catch(error => {
+            console.error('Error generating PDF report:', error);
+        });
+    };
+
+    const exportSessionData = (format) => {
+        if (!selectedSession) {
+            console.error('No session selected');
+            return;
+        }
+
+        const url = `http://localhost:5000/import_export/athlete/session/${selectedSession.sessionsID}/export_${format}`;
+        axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+        })
+        .then(response => {
+            const blob = new Blob([response.data], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', `session_${new Date(selectedSession.start_time).toLocaleDateString()}.json`);
+            document.body.appendChild(link);
+            link.click();
+        })
+        .catch(error => {
+            console.error(`Error exporting ${format} data:`, error);
+        });
+    };
+
+    const formatChartData = (data, label) => ({
+        labels: data.map((_, index) => index),
+        datasets: [{
+            label: label,
+            data: data,
+            borderColor: 'rgba(75,192,192,1)',
+            backgroundColor: 'rgba(75,192,192,0.2)',
+            fill: true,
+        }],
+    });
 
     if (loading) {
         return <div>Loading athlete profile...</div>;
@@ -71,17 +131,6 @@ const AthleteProfile = ({ token }) => {
     if (!athleteData || athleteData.sessions.length === 0) {
         return <div>No session data available for this athlete.</div>;
     }
-
-    const formatChartData = (data, label) => ({
-        labels: data.map((_, index) => index),
-        datasets: [{
-            label: label,
-            data: data,
-            borderColor: 'rgba(75,192,192,1)',
-            backgroundColor: 'rgba(75,192,192,0.2)',
-            fill: true,
-        }],
-    });
 
     return (
         <div className="athlete-profile-container">
@@ -139,6 +188,8 @@ const AthleteProfile = ({ token }) => {
                                 </MapContainer>
                             </div>
                         )}
+                        <button className="generate-pdf-button" onClick={() => generatePDFReport(selectedSession, token)}>Generate PDF Report</button>
+                        <button className="generate-pdf-button" onClick={() => exportSessionData('json')}>Export to JSON</button>
                     </div>
                 )}
             </div>

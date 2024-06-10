@@ -1,8 +1,9 @@
+import io
 import json
 import logging
 import os
 
-from flask_mail import Mail, Message
+from flask_mail import Message
 from datetime import datetime, timedelta
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -10,6 +11,8 @@ from sqlalchemy import func, and_
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Coach, Cyclist
 from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan
+
+
 
 
 coach_bp = Blueprint('coach_bp', __name__)
@@ -91,6 +94,7 @@ def get_athlete_profile(id):
         session_data = []
         for session in sessions:
             session_data.append({
+                "sessionsID": session.sessionsID,
                 "altitude_avg": session.altitude_avg,
                 "altitude_max": session.altitude_max,
                 "altitude_min": session.altitude_min,
@@ -217,3 +221,5 @@ def send_training_plan_email(cyclist_email, training_plan):
         f"Please log in to view the full details."
     )
     mail.send(msg)
+
+
