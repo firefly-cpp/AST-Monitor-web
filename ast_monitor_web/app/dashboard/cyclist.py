@@ -2,12 +2,14 @@ import json
 import logging
 import os
 import requests
-from flask import jsonify, Blueprint, make_response, request
+import pandas as pd
+from flask import jsonify, Blueprint, make_response, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sport_activities_features import HillIdentification, TopographicFeatures
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Cyclist
-from niaarm import NiaARM
+from niaarm import Dataset, get_rules
+from niapy.algorithms.basic import DifferentialEvolution
 
 cyclist_bp = Blueprint('cyclist_bp', __name__)
 
@@ -29,19 +31,43 @@ def run_niaarm():
 
         try:
             # Path to your CSV file
-            csv_file_path = 'C:/Users/Korisnik/Downloads/random_sportydatagen.csv'
+            csv_file_path = './csv/treci.csv'
 
-            # Run NiaARM
-            niaarm = NiaARM()
-            rules = niaarm.run(csv_file_path, support_threshold=0.5, confidence_threshold=0.7)
+            # Log the working directory and file path
+            current_app.logger.info(f"Current working directory: {os.getcwd()}")
+            current_app.logger.info(f"Using CSV file at path: {csv_file_path}")
+            absolute_csv_file_path = os.path.abspath(csv_file_path)
+            current_app.logger.info(f"Absolute CSV file path: {absolute_csv_file_path}")
+
+            if not os.path.exists(absolute_csv_file_path):
+                current_app.logger.error(f"CSV file not found at path: {absolute_csv_file_path}")
+                return jsonify({"error": "CSV file not found"}), 404
+
+            # Load dataset
+            dataset = Dataset(absolute_csv_file_path)
+
+            # Use Differential Evolution algorithm for rule mining
+            algo = DifferentialEvolution(population_size=50, differential_weight=0.5, crossover_probability=0.9)
+            metrics = ('support', 'confidence')
+
+            # Get rules
+            rules, run_time = get_rules(dataset, algo, metrics, max_iters=30, logging=True)
 
             # Convert rules to JSON serializable format
-            rules_json = [rule.to_dict() for rule in rules]
+            rules_json = []
+            for rule in rules:
+                rule_dict = {
+                    "lhs": [str(feature) for feature in rule.antecedent] if hasattr(rule, 'antecedent') else None,  # left-hand side
+                    "rhs": [str(feature) for feature in rule.consequent] if hasattr(rule, 'consequent') else None,  # right-hand side
+                    "support": getattr(rule, 'support', None),
+                    "confidence": getattr(rule, 'confidence', None)
+                }
+                rules_json.append(rule_dict)
 
-            return jsonify(rules_json)
+            return jsonify({"rules": rules_json, "run_time": run_time})
         except Exception as e:
-            logging.error(f"Error running NiaARM: {str(e)}")
-            return jsonify({"error": "Error running NiaARM"}), 500
+            current_app.logger.error(f"Error running NiaARM: {str(e)}")
+            return jsonify({"error": f"Error running NiaARM: {str(e)}"}), 500
 
 def build_cors_preflight_response():
     response = make_response()
