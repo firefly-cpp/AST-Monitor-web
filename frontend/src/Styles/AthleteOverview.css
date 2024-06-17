@@ -5,8 +5,7 @@
   align-items: center;
   width: 90%;
   max-width: 1200px;
-  margin-top: 20px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgb(224, 224, 224, 0.7);
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
@@ -38,7 +37,7 @@
   min-width: 200px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  text-align: left;
+  text-align: left; /* Keep the content aligned to the left */
 }
 
 .athlete-container:hover {
@@ -51,6 +50,7 @@
   font-size: 24px;
   color: #4CAF50;
   margin-bottom: 10px;
+  text-align: center; /* Center only the username */
 }
 
 .athlete-container p {

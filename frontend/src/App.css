@@ -3,6 +3,7 @@
 
 * {
     box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
 }
 
 html, body, #root {
@@ -10,6 +11,8 @@ html, body, #root {
     margin: 0;
     padding: 0;
     font-family: 'Roboto', sans-serif;
+    background-image: url('../../photos/velosipedist-sportsmen-gory-priroda-doroga-road-bike.jpg');
+
 }
 
 body {
@@ -31,9 +34,7 @@ body {
     }
 }
 
-#root {
-    padding-top: 60px; /* Ensure there is space below the navbar */
-}
+
 
 .navbar {
     background-color: rgba(0, 0, 0, 0.7);

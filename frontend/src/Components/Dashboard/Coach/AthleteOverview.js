@@ -45,13 +45,11 @@ const AthleteOverview = ({ token }) => {
               <strong>{athlete.username}</strong>
               {athlete.last_session ? (
                 <div>
-                  <p>Last Session date: {athlete.last_session.time.split('T')[0]}</p>
-                  <p>Time: {athlete.last_session.time.split('T')[1]}</p>
-                  <p>Altitude Avg: {athlete.last_session.altitude_avg}</p>
-                  <p>Calories: {athlete.last_session.calories}</p>
+                  <p>Last session date: {athlete.last_session.time.split('T')[0]}</p>
+                  <p>Time of the session: {athlete.last_session.time.split('T')[1]}</p>
+                  <p>Calories burned: {athlete.last_session.calories}</p>
                   <p>Duration: {athlete.last_session.duration} seconds</p>
-                  <p>HR Avg: {athlete.last_session.hr_avg}</p>
-                  <p>Total Distance: {athlete.last_session.total_distance}</p>
+                  <p>Total Distance: {athlete.last_session.total_distance} m</p>
                 </div>
               ) : (
                 <p>No sessions yet</p>

@@ -1,7 +1,5 @@
 /* src/Styles/HomePage.css */
-body {
-  background-image: url('../../../photos/velosipedist-sportsmen-gory-priroda-doroga-road-bike.jpg');
-}
+
 
 .homepage-container {
   display: flex;

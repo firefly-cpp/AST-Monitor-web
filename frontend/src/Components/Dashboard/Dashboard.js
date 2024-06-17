@@ -5,16 +5,16 @@ import PerformanceAnalytics from './PerformanceAnalytics';
 import HealthMonitoring from './HealthMonitoring';
 import AthleteOverview from './Coach/AthleteOverview';
 import AthleteProfile from './Coach/AthleteProfile';
-import PreviewImportedTraining from './Coach/PreviewImportedTraining';
+import PreviewImportedTraining from './Coach/ImportPreview';
 import '../../Styles/Dashboard.css';
 import HistoryCalendar from "./HistoryCalendar";
 import CreateTrainingPlan from "./Coach/CreateTrainingPlan";
+import ImportPreview from "./Coach/ImportPreview";
 
 const Dashboard = ({ role, token }) => {
     return (
         <div className="dashboard">
             <Sidebar role={role} />
-
             <div className="content">
                 <Routes>
                     {role === 'coach' ? (
@@ -22,7 +22,7 @@ const Dashboard = ({ role, token }) => {
                             <Route path="/overview" element={<AthleteOverview token={token} />} />
                             <Route path="/athlete/:id" element={<AthleteProfile token={token} />} />
                             <Route path="/create-plan" element={<CreateTrainingPlan token={token} />} />
-                            <Route path="/import-preview" element={<PreviewImportedTraining token={token} />} />
+                            <Route path="/import-preview" element={<ImportPreview token={token} />} />
                             <Route path="*" element={<Navigate to="/overview" />} />
                         </>
                     ) : (

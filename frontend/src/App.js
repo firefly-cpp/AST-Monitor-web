@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Authentication/Login';
@@ -46,6 +45,7 @@ const App = () => {
             </>
           ) : (
             <>
+              <Route path="/" element={<HomePage />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/dashboard/*" element={<Dashboard role={auth.role} token={auth.token} />} />

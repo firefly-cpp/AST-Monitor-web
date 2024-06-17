@@ -12,7 +12,7 @@ data_bp = Blueprint('data_bp', __name__)
 @data_bp.route('/tcx-data', methods=['GET'])
 def get_tcx_data():
     # The path to the TCX file should be securely retrieved or configured
-    path_to_tcx_file = "C:/Users/Korisnik/Downloads/Sport5/Sport5/1/1.tcx"
+    path_to_tcx_file = "C:/Users/Vanja/Desktop/Projekt/Sport5/Sport5/1/1.tcx"
     tcx_file = TCXFile()
     data = tcx_file.read_one_file(path_to_tcx_file)
 

@@ -5,14 +5,12 @@
   align-items: flex-start;
   min-height: 100vh;
   overflow: auto;
-  background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
 }
 
 .athlete-profile {
   background: rgba(255, 255, 255, 0.95);
   padding: 40px 60px;
   border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 1200px;
   margin: 20px auto;
@@ -24,7 +22,6 @@
 
 .athlete-profile:hover {
   transform: translateY(-10px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .athlete-profile h2, .athlete-profile h3, .athlete-profile h4 {
@@ -177,4 +174,78 @@
   }
 }
 
+.session-details-table {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    text-align: left;
+}
 
+.session-details-table h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 28px;
+    color: #333;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.session-details-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+.session-details-table td {
+    padding: 10px;
+    font-size: 18px;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+}
+
+.session-details-table tr:last-child td {
+    border-bottom: none;
+}
+
+.session-details-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.session-details-table tr:hover {
+    background: rgba(30, 136, 229, 0.1);
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.generate-pdf-button {
+    background-color: #4CAF50; /* Green background */
+    border: none; /* Remove borders */
+    color: white; /* White text */
+    padding: 15px 32px; /* Some padding */
+    text-align: center; /* Centered text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block; /* Make the buttons appear side-by-side */
+    font-size: 16px; /* Increase font size */
+    margin: 10px; /* Some margin */
+    cursor: pointer; /* Pointer/hand icon on hover */
+    border-radius: 10px; /* Rounded corners */
+    transition: background-color 0.3s, transform 0.3s; /* Animation for hover effect */
+}
+
+.generate-pdf-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly larger on hover */
+}
+
+.generate-pdf-button:active {
+    background-color: #3e8e41; /* Even darker green when clicked */
+    transform: scale(0.98); /* Slightly smaller when clicked */
+}

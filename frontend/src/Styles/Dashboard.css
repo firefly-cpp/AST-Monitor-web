@@ -1,7 +1,7 @@
 /* src/Styles/Dashboard.css */
 .dashboard {
   margin-top: 60px; /* Adjust for the height of the navbar */
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
   display: flex;
   min-height: 100vh;
   overflow: hidden;
@@ -12,7 +12,7 @@
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   flex: 1;
   max-width: 100%;
@@ -95,18 +95,25 @@ h2 {
 .sidebar {
   width: 15%;
   height: calc(100vh - 60px);
-  background-color: #f4f4f4;
+  background-color: rgba(51, 51, 51, 0.9); /* Slightly transparent dark background */
   padding: 15px;
   position: fixed;
   top: 60px;
   left: 0;
   overflow-y: auto;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  color: #fff; /* White text for sidebar */
+  transition: background-color 0.3s ease;
+}
+
+.sidebar:hover {
+  background-color: rgba(68, 68, 68, 0.9); /* Slightly lighter on hover */
 }
 
 .sidebar h2 {
   font-size: 1.5em;
   margin-bottom: 1em;
+  color: #fff; /* Ensure the heading color is white */
 }
 
 .sidebar ul {
@@ -120,12 +127,12 @@ h2 {
 
 .sidebar ul li a {
   text-decoration: none;
-  color: #333;
+  color: #fff;
   font-size: 1.1em;
 }
 
 .sidebar ul li a:hover {
-  color: #007bff;
+  color: #4CAF50; /* Green color on hover */
 }
 
 .content {
@@ -134,4 +141,7 @@ h2 {
   width: 85%;
   margin-top: 60px;
   overflow-y: auto;
+  display: flex;
+  justify-content: center; /* Center items horizontally */
+  align-items: center; /* Center items vertically */
 }

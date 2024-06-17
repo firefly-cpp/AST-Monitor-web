@@ -31,7 +31,8 @@ def run_niaarm():
 
         try:
             # Path to your CSV file
-            csv_file_path = './csv/treci.csv'
+            # csv_file_path = './csv/treci.csv'
+            csv_file_path = 'C:/Users/Vanja/Desktop/Projekt/CsvData/drugi.csv'
 
             # Log the working directory and file path
             current_app.logger.info(f"Current working directory: {os.getcwd()}")

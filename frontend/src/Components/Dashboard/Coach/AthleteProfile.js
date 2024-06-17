@@ -146,31 +146,72 @@ const AthleteProfile = ({ token }) => {
                 />
 
                 {selectedSession && (
-                    <div>
+                    <div className="session-details-table">
                         <h3>Session Details on {new Date(selectedSession.start_time).toLocaleDateString()}</h3>
-                        <p>Altitude Avg: {selectedSession.altitude_avg}</p>
-                        <p>Altitude Max: {selectedSession.altitude_max}</p>
-                        <p>Altitude Min: {selectedSession.altitude_min}</p>
-                        <p>Ascent: {selectedSession.ascent}</p>
-                        <p>Calories: {selectedSession.calories}</p>
-                        <p>Descent: {selectedSession.descent}</p>
-                        <p>Distance: {selectedSession.distance}</p>
-                        <p>Duration: {selectedSession.duration} seconds</p>
-                        <p>HR Avg: {selectedSession.hr_avg}</p>
-                        <p>HR Max: {selectedSession.hr_max}</p>
-                        <p>HR Min: {selectedSession.hr_min}</p>
-                        <p>Total Distance: {selectedSession.total_distance}</p>
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td>Altitude Avg:</td>
+                                <td>{selectedSession.altitude_avg}</td>
+                            </tr>
+                            <tr>
+                                <td>Altitude Max:</td>
+                                <td>{selectedSession.altitude_max}</td>
+                            </tr>
+                            <tr>
+                                <td>Altitude Min:</td>
+                                <td>{selectedSession.altitude_min}</td>
+                            </tr>
+                            <tr>
+                                <td>Ascent:</td>
+                                <td>{selectedSession.ascent}</td>
+                            </tr>
+                            <tr>
+                                <td>Calories:</td>
+                                <td>{selectedSession.calories}</td>
+                            </tr>
+                            <tr>
+                                <td>Descent:</td>
+                                <td>{selectedSession.descent}</td>
+                            </tr>
+                            <tr>
+                                <td>Distance:</td>
+                                <td>{selectedSession.distance}</td>
+                            </tr>
+                            <tr>
+                                <td>Duration:</td>
+                                <td>{selectedSession.duration} seconds</td>
+                            </tr>
+                            <tr>
+                                <td>HR Avg:</td>
+                                <td>{selectedSession.hr_avg}</td>
+                            </tr>
+                            <tr>
+                                <td>HR Max:</td>
+                                <td>{selectedSession.hr_max}</td>
+                            </tr>
+                            <tr>
+                                <td>HR Min:</td>
+                                <td>{selectedSession.hr_min}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Distance:</td>
+                                <td>{selectedSession.total_distance}</td>
+                            </tr>
+                            </tbody>
+                        </table>
                         <div className="chart-container">
                             <h4>Altitude Over Time</h4>
-                            <Line data={formatChartData(selectedSession.altitudes, 'Altitude')} />
+                            <Line data={formatChartData(selectedSession.altitudes, 'Altitude')}/>
                             <h4>Heart Rate Over Time</h4>
-                            <Line data={formatChartData(selectedSession.heartrates, 'Heart Rate')} />
+                            <Line data={formatChartData(selectedSession.heartrates, 'Heart Rate')}/>
                             <h4>Speed Over Time</h4>
-                            <Line data={formatChartData(selectedSession.speeds, 'Speed')} />
+                            <Line data={formatChartData(selectedSession.speeds, 'Speed')}/>
                         </div>
                         {selectedSession.positions && selectedSession.positions.length > 0 && (
                             <div className="map-container">
-                                <MapContainer center={selectedSession.positions[0]} zoom={13} style={{ height: 400, width: "100%" }}>
+                                <MapContainer center={selectedSession.positions[0]} zoom={13}
+                                              style={{height: "100%", width: "100%"}}>
                                     <TileLayer
                                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -182,14 +223,23 @@ const AthleteProfile = ({ token }) => {
                                     <Marker position={selectedSession.positions[0]} icon={startIcon}>
                                         <Popup>Start Point</Popup>
                                     </Marker>
-                                    <Marker position={selectedSession.positions[selectedSession.positions.length - 1]} icon={endIcon}>
+                                    <Marker position={selectedSession.positions[selectedSession.positions.length - 1]}
+                                            icon={endIcon}>
                                         <Popup>End Point</Popup>
                                     </Marker>
                                 </MapContainer>
                             </div>
                         )}
-                        <button className="generate-pdf-button" onClick={() => generatePDFReport(selectedSession, token)}>Generate PDF Report</button>
-                        <button className="generate-pdf-button" onClick={() => exportSessionData('json')}>Export to JSON</button>
+                        <div className="button-container">
+                            <button className="generate-pdf-button"
+                                    onClick={() => generatePDFReport(selectedSession, token)}>
+                                Generate PDF Report
+                            </button>
+                            <button className="generate-pdf-button" onClick={() => exportSessionData('json')}>
+                                Export to JSON
+                            </button>
+                        </div>
+
                     </div>
                 )}
             </div>
