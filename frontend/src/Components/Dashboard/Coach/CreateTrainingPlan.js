@@ -1,4 +1,3 @@
-// src/Components/Coach/CreateTrainingPlan.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../../Styles/CreateTrainingPlan.css'; // Import the CSS file
@@ -6,17 +5,21 @@ import '../../../Styles/CreateTrainingPlan.css'; // Import the CSS file
 const CreateTrainingPlan = ({ token }) => {
     const [cyclists, setCyclists] = useState([]);
     const [form, setForm] = useState({
-        start_time: '',
-        duration: 0,
-        total_distance: 0,
-        hr_avg: 0,
-        altitude_avg: 0,
-        altitude_max: 0,
-        calories: 0,
-        ascent: 0,
-        descent: 0,
-        cyclist_ids: []
+        start_date: '',
+        description: '',
+        sessions: []
     });
+    const [selectedCyclists, setSelectedCyclists] = useState([]);
+    const [templates, setTemplates] = useState([]);
+    const [newTemplate, setNewTemplate] = useState({
+        date: '',
+        type: 'endurance',
+        duration: 0,
+        distance: 0,
+        intensity: '',
+        notes: ''
+    });
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
 
     useEffect(() => {
         axios.get('http://localhost:5000/coach/athletes', { headers: { Authorization: `Bearer ${token}` } })
@@ -25,6 +28,13 @@ const CreateTrainingPlan = ({ token }) => {
             })
             .catch(error => {
                 console.error("There was an error fetching the cyclists!", error);
+            });
+        axios.get('http://localhost:5000/coach/training_plan_templates', { headers: { Authorization: `Bearer ${token}` } })
+            .then(response => {
+                setTemplates(response.data);
+            })
+            .catch(error => {
+                console.error("There was an error fetching the templates!", error);
             });
     }, [token]);
 
@@ -38,17 +48,51 @@ const CreateTrainingPlan = ({ token }) => {
 
     const handleCheckboxChange = (e) => {
         const { value, checked } = e.target;
+        setSelectedCyclists(checked
+            ? [...selectedCyclists, value]
+            : selectedCyclists.filter(id => id !== value));
+    };
+
+    const handleTemplateSelect = (template) => {
+        setSelectedTemplate(template);
         setForm({
             ...form,
-            cyclist_ids: checked
-                ? [...form.cyclist_ids, value]
-                : form.cyclist_ids.filter(id => id !== value)
+            sessions: [template]
         });
+    };
+
+    const handleCreateTemplateChange = (e) => {
+        const { name, value } = e.target;
+        setNewTemplate({
+            ...newTemplate,
+            [name]: value
+        });
+    };
+
+    const handleCreateTemplateSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:5000/coach/create_training_plan_template', newTemplate, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTemplates([...templates, response.data]);
+            setNewTemplate({
+                date: '',
+                type: 'endurance',
+                duration: 0,
+                distance: 0,
+                intensity: '',
+                notes: ''
+            });
+        } catch (error) {
+            console.error("There was an error creating the template!", error);
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://localhost:5000/coach/create_training_plan', form, {
+        const data = { ...form, cyclist_ids: selectedCyclists };
+        axios.post('http://localhost:5000/coach/create_training_plan', data, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(response => {
@@ -64,40 +108,12 @@ const CreateTrainingPlan = ({ token }) => {
             <h2>Create Training Plan</h2>
             <form onSubmit={handleSubmit} className="training-plan-form">
                 <label className="form-label">
-                    Start Time:
-                    <input type="datetime-local" name="start_time" onChange={handleChange} required className="form-input" />
+                    Start Date:
+                    <input type="datetime-local" name="start_date" onChange={handleChange} value={form.start_date} required className="form-input" />
                 </label>
                 <label className="form-label">
-                    Duration (minutes):
-                    <input type="number" name="duration" onChange={handleChange} required className="form-input" />
-                </label>
-                <label className="form-label">
-                    Total Distance:
-                    <input type="number" name="total_distance" onChange={handleChange} required className="form-input" />
-                </label>
-                <label className="form-label">
-                    Average Heart Rate:
-                    <input type="number" name="hr_avg" onChange={handleChange} className="form-input" />
-                </label>
-                <label className="form-label">
-                    Average Altitude:
-                    <input type="number" name="altitude_avg" onChange={handleChange} className="form-input" />
-                </label>
-                <label className="form-label">
-                    Max Altitude:
-                    <input type="number" name="altitude_max" onChange={handleChange} className="form-input" />
-                </label>
-                <label className="form-label">
-                    Calories:
-                    <input type="number" name="calories" onChange={handleChange} className="form-input" />
-                </label>
-                <label className="form-label">
-                    Ascent:
-                    <input type="number" name="ascent" onChange={handleChange} className="form-input" />
-                </label>
-                <label className="form-label">
-                    Descent:
-                    <input type="number" name="descent" onChange={handleChange} className="form-input" />
+                    Description:
+                    <textarea name="description" onChange={handleChange} value={form.description} className="form-input"></textarea>
                 </label>
                 <fieldset className="form-fieldset">
                     <legend>Select Cyclists</legend>
@@ -116,8 +132,60 @@ const CreateTrainingPlan = ({ token }) => {
                         ))}
                     </div>
                 </fieldset>
+                <fieldset className="form-fieldset">
+                    <legend>Select Templates</legend>
+                    <div className="template-list">
+                        {templates.map(template => (
+                            <div key={template.sessionID}
+                                className={`template-card ${selectedTemplate && selectedTemplate.sessionID === template.sessionID ? 'selected' : ''}`}
+                                onClick={() => handleTemplateSelect(template)}>
+                                <h4>{template.type}</h4>
+                                <p>Date: {new Date(template.date).toLocaleString()}</p>
+                                <p>Duration: {template.duration}</p>
+                                <p>Distance: {template.distance} km</p>
+                                <p>Intensity: {template.intensity}</p>
+                                <p>Notes: {template.notes}</p>
+                            </div>
+                        ))}
+                    </div>
+                </fieldset>
                 <button type="submit" className="submit-button">Create Plan</button>
             </form>
+
+            <fieldset className="form-fieldset">
+                <legend>Create New Template</legend>
+                <form onSubmit={handleCreateTemplateSubmit} className="create-template-form">
+                    <label className="form-label">
+                        Date:
+                        <input type="datetime-local" name="date" value={newTemplate.date} onChange={handleCreateTemplateChange} required className="form-input" />
+                    </label>
+                    <label className="form-label">
+                        Type:
+                        <select name="type" value={newTemplate.type} onChange={handleCreateTemplateChange} required className="form-input">
+                            <option value="endurance">Endurance</option>
+                            <option value="interval">Interval</option>
+                            <option value="recovery">Recovery</option>
+                        </select>
+                    </label>
+                    <label className="form-label">
+                        Duration (minutes):
+                        <input type="number" name="duration" value={newTemplate.duration} onChange={handleCreateTemplateChange} required className="form-input" />
+                    </label>
+                    <label className="form-label">
+                        Distance (km):
+                        <input type="number" name="distance" value={newTemplate.distance} onChange={handleCreateTemplateChange} required className="form-input" />
+                    </label>
+                    <label className="form-label">
+                        Intensity:
+                        <input type="text" name="intensity" value={newTemplate.intensity} onChange={handleCreateTemplateChange} className="form-input" />
+                    </label>
+                    <label className="form-label">
+                        Notes:
+                        <textarea name="notes" value={newTemplate.notes} onChange={handleCreateTemplateChange} className="form-input"></textarea>
+                    </label>
+                    <button type="submit" className="submit-button">Create Template</button>
+                </form>
+            </fieldset>
         </div>
     );
 };

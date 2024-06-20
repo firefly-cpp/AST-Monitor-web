@@ -25,7 +25,8 @@ const EditProfile = () => {
                 });
                 const data = response.data;
                 setUsername(data.username);
-                setRole(localStorage.getItem('role'));
+                setRole(data.role);  // Ensure the role is set correctly
+                console.log('Fetched profile:', data);  // Debugging log
                 if (data.role === 'cyclist') {
                     setHeight(data.height_cm || '');
                     setWeight(data.weight_kg || '');
@@ -45,8 +46,8 @@ const EditProfile = () => {
         const updateData = {
             username,
             ...(role === 'cyclist' && {
-                height_cm: height,
-                weight_kg: weight
+                height_cm: height !== '' ? height : null,
+                weight_kg: weight !== '' ? weight : null
             })
         };
 

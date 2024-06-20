@@ -10,21 +10,32 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, and_
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Coach, Cyclist
-from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan
-
-
-
+from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan, TrainingPlanTemplate
 
 coach_bp = Blueprint('coach_bp', __name__)
 
+def parse_datetime(datetime_str):
+    formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]
+    for fmt in formats:
+        try:
+            return datetime.strptime(datetime_str, fmt)
+        except ValueError:
+            pass
+    raise ValueError(f"time data '{datetime_str}' does not match any supported format")
 
+def parse_duration(duration_str):
+    try:
+        h, m, s = map(int, duration_str.split(':'))
+        return timedelta(hours=h, minutes=m, seconds=s)
+    except ValueError:
+        raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS'")
 
 @coach_bp.route('/athletes', methods=['GET'])
 @jwt_required()
 def get_athletes():
     identity = get_jwt_identity()
-    current_user_id = identity['user_id']  # Get user ID from the identity dictionary
-    current_user_role = identity['role']  # Get role from the identity dictionary
+    current_user_id = identity['user_id']
+    current_user_role = identity['role']
 
     logging.info(f"Current user ID: {current_user_id}, Role: {current_user_role}")
 
@@ -90,7 +101,6 @@ def get_athlete_profile(id):
 
         sessions = TrainingSession.query.filter_by(cyclistID=id).all()
 
-        # Assuming sessions contain the data needed for the graphs
         session_data = []
         for session in sessions:
             session_data.append({
@@ -114,7 +124,6 @@ def get_athlete_profile(id):
                 "positions": json.loads(session.positions) if session.positions else []
             })
 
-        # Debug output
         logging.info(f"Athlete ID: {athlete.cyclistID}")
         logging.info(f"Session Data: {session_data}")
 
@@ -140,55 +149,43 @@ def get_sessions_for_calendar(id):
     return jsonify(session_dates)
 
 
-
-
 @coach_bp.route('/create_training_plan', methods=['POST'])
 @jwt_required()
 def create_training_plan():
     data = request.get_json()
     coach_id = get_jwt_identity()['user_id']
 
-    # Try parsing with seconds
     try:
-        start_time = datetime.strptime(data['start_time'], "%Y-%m-%dT%H:%M:%S")
-    except ValueError:
-        # Fallback to parsing without seconds
-        start_time = datetime.strptime(data['start_time'], "%Y-%m-%dT%H:%M")
+        logging.info(f"Received data: {data}")
 
-    # Ensure duration is an integer
-    try:
-        duration_minutes = int(data['duration'])
-    except ValueError:
-        return jsonify({"error": "Duration must be an integer"}), 400
+        cyclist_ids = data['cyclist_ids']
+        start_date = parse_datetime(data['start_date'])
+        description = data.get('description', '')
 
-    duration = timedelta(minutes=duration_minutes)
-    total_distance = data['total_distance']
-    hr_avg = data.get('hr_avg')
-    altitude_avg = data.get('altitude_avg')
-    altitude_max = data.get('altitude_max')
-    calories = data.get('calories')
-    ascent = data.get('ascent')
-    descent = data.get('descent')
-    cyclist_ids = data['cyclist_ids']
-
-    try:
-        # Create the training plan
         training_plan = TrainingPlan(
             coachID=coach_id,
-            start_time=start_time,
-            duration=duration,
-            total_distance=total_distance,
-            hr_avg=hr_avg,
-            altitude_avg=altitude_avg,
-            altitude_max=altitude_max,
-            calories=calories,
-            ascent=ascent,
-            descent=descent
+            start_date=start_date,
+            description=description
         )
         db.session.add(training_plan)
         db.session.commit()
 
-        # Associate training plan with cyclists
+        for session_data in data['sessions']:
+            session_date = parse_datetime(session_data['date'])
+            session_duration = parse_duration(session_data['duration'])
+            new_session = TrainingPlanTemplate(
+                planID=training_plan.plansID,
+                date=session_date,
+                type=session_data['type'],
+                duration=session_duration,
+                distance=session_data['distance'],
+                intensity=session_data.get('intensity'),
+                notes=session_data.get('notes')
+            )
+            db.session.add(new_session)
+
+        db.session.commit()
+
         for cyclist_id in cyclist_ids:
             cyclist_training_plan = CyclistTrainingPlan(
                 cyclistID=cyclist_id,
@@ -203,9 +200,10 @@ def create_training_plan():
 
         return jsonify({"message": "Training plan created successfully"}), 201
     except Exception as e:
-        db.session.rollback()
         logging.error(f"Error creating training plan: {str(e)}")
-        return jsonify({"error": "Error creating training plan"}), 500
+        db.session.rollback()
+        return jsonify({"error": f"Error creating training plan: {str(e)}"}), 500
+
 
 def send_training_plan_email(cyclist_email, training_plan):
     from ..__init__ import mail
@@ -216,10 +214,39 @@ def send_training_plan_email(cyclist_email, training_plan):
     )
     msg.body = (
         f"A new training plan has been created for you.\n"
-        f"Start Time: {training_plan.start_time}\n"
-        f"Duration: {training_plan.duration}\n"
+        f"Start Date: {training_plan.start_date}\n"
+        f"Description: {training_plan.description}\n"
         f"Please log in to view the full details."
     )
     mail.send(msg)
 
 
+@coach_bp.route('/training_plan_templates', methods=['GET'])
+@jwt_required()
+def get_training_plan_templates():
+    templates = TrainingPlanTemplate.query.all()
+    return jsonify([template.to_dict() for template in templates])
+
+
+@coach_bp.route('/create_training_plan_template', methods=['POST'])
+@jwt_required()
+def create_training_plan_template():
+    data = request.get_json()
+
+    try:
+        new_template = TrainingPlanTemplate(
+            date=parse_datetime(data['date']),
+            type=data['type'],
+            duration=parse_duration(data['duration']),
+            distance=data['distance'],
+            intensity=data.get('intensity'),
+            notes=data.get('notes'),
+            planID=None  # Assuming templates are created without associating a specific plan initially
+        )
+        db.session.add(new_template)
+        db.session.commit()
+        return jsonify(new_template.to_dict()), 201
+    except Exception as e:
+        logging.error(f"Error creating training plan template: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": f"Error creating training plan template: {str(e)}"}), 500

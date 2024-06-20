@@ -125,7 +125,10 @@ def get_profile():
 
     if not user:
         return jsonify({"message": "User not found"}), 404
-    return jsonify(user.to_dict()), 200
+
+    user_data = user.to_dict()
+    user_data['role'] = role  # Add role to the user data
+    return jsonify(user_data), 200
 
 
 @auth_bp.route('/profile', methods=['PUT'])
@@ -149,9 +152,9 @@ def update_profile():
 
     # If the user is a Cyclist, update additional fields
     if role == 'cyclist':
-        if 'height_cm' in data:
+        if 'height_cm' in data and data['height_cm'] != '':
             user.height_cm = data['height_cm']
-        if 'weight_kg' in data:
+        if 'weight_kg' in data and data['weight_kg'] != '':
             user.weight_kg = data['weight_kg']
 
     db.session.commit()
@@ -198,8 +201,8 @@ def upload_profile_picture():
         # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        if user.profile_picture:
-            old_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'photos/profilePictures', user.profile_picture)
+        if user.profile_picture and user.profile_picture != 'photos/profilePictures/blankProfilePic.png':
+            old_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user.profile_picture)
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
 

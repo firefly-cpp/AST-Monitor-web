@@ -2,6 +2,7 @@
 -- Please log an issue at https://github.com/pgadmin-org/pgadmin4/issues/new/choose if you find any bugs, including reproduction steps.
 BEGIN;
 
+
 CREATE TABLE IF NOT EXISTS public.api_integrations
 (
     "integrationsID" serial NOT NULL,
@@ -24,9 +25,17 @@ CREATE TABLE IF NOT EXISTS public.coaches
     username character varying(50) COLLATE pg_catalog."default" NOT NULL,
     password character varying(255) COLLATE pg_catalog."default" NOT NULL,
     email character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    profile_picture character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT coaches_pkey PRIMARY KEY ("coachID"),
     CONSTRAINT coaches_email_unique UNIQUE (email),
     CONSTRAINT coaches_username_key UNIQUE (username)
+);
+
+CREATE TABLE IF NOT EXISTS public.cyclist_training_plans
+(
+    "cyclistID" integer NOT NULL,
+    "plansID" integer NOT NULL,
+    CONSTRAINT cyclist_training_plans_pkey PRIMARY KEY ("cyclistID", "plansID")
 );
 
 CREATE TABLE IF NOT EXISTS public.cyclists
@@ -39,6 +48,7 @@ CREATE TABLE IF NOT EXISTS public.cyclists
     date_of_birth date,
     height_cm integer,
     weight_kg integer,
+    profile_picture character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT cyclists_pkey PRIMARY KEY ("cyclistID"),
     CONSTRAINT cyclists_email_unique UNIQUE (email),
     CONSTRAINT cyclists_username_key UNIQUE (username)
@@ -69,30 +79,32 @@ CREATE TABLE IF NOT EXISTS public.organizations
     CONSTRAINT organizations_pkey PRIMARY KEY ("organizationsID")
 );
 
-CREATE TABLE IF NOT EXISTS public.performance_metrics
+CREATE TABLE IF NOT EXISTS public.training_plan_templates
 (
-    "metricsID" serial NOT NULL,
-    "sessionsID" integer NOT NULL,
-    heart_rate integer,
-    speed numeric(5, 2),
-    power_output numeric(5, 2),
-    gps_data text COLLATE pg_catalog."default",
-    CONSTRAINT performance_metrics_pkey PRIMARY KEY ("metricsID")
+    "sessionID" serial NOT NULL,
+    "planID" integer,
+    date timestamp without time zone NOT NULL,
+    type character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    duration interval NOT NULL,
+    distance numeric NOT NULL,
+    intensity character varying(50) COLLATE pg_catalog."default",
+    notes text COLLATE pg_catalog."default",
+    CONSTRAINT training_plan_templates_pkey PRIMARY KEY ("sessionID")
 );
 
 CREATE TABLE IF NOT EXISTS public.training_plans
 (
     "plansID" serial NOT NULL,
-    start_date date NOT NULL,
-    end_date date NOT NULL,
-    goal character varying(255) COLLATE pg_catalog."default",
+    "coachID" integer NOT NULL,
+    start_date timestamp without time zone NOT NULL,
+    description text COLLATE pg_catalog."default",
     CONSTRAINT training_plans_pkey PRIMARY KEY ("plansID")
 );
 
 CREATE TABLE IF NOT EXISTS public.training_sessions
 (
     "sessionsID" serial NOT NULL,
-    "cyclistID" integer NOT NULL,  -- Adding cyclistID for the relationship
+    "cyclistID" integer NOT NULL,
     altitude_avg numeric,
     altitude_max numeric,
     altitude_min numeric,
@@ -109,7 +121,7 @@ CREATE TABLE IF NOT EXISTS public.training_sessions
     hr_min integer,
     positions text COLLATE pg_catalog."default",
     speeds text COLLATE pg_catalog."default",
-    start_time timestamp,
+    start_time timestamp without time zone,
     steps integer,
     timestamps text COLLATE pg_catalog."default",
     total_distance numeric,
@@ -119,7 +131,7 @@ CREATE TABLE IF NOT EXISTS public.training_sessions
 CREATE TABLE IF NOT EXISTS public.user_equipment
 (
     "user_equipmentID" serial NOT NULL,
-    "cyclistID" integer NOT NULL,  -- Changing to cyclistID for consistency
+    "cyclistID" integer NOT NULL,
     "equipmentID" integer NOT NULL,
     CONSTRAINT user_equipment_pkey PRIMARY KEY ("user_equipmentID")
 );
@@ -131,11 +143,27 @@ ALTER TABLE IF EXISTS public.api_integrations
     ON DELETE NO ACTION
     NOT VALID;
 
+
+ALTER TABLE IF EXISTS public.cyclist_training_plans
+    ADD CONSTRAINT cyclist_training_plans_cyclistid_fkey FOREIGN KEY ("cyclistID")
+    REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.cyclist_training_plans
+    ADD CONSTRAINT cyclist_training_plans_plansid_fkey FOREIGN KEY ("plansID")
+    REFERENCES public.training_plans ("plansID") MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+
+
 ALTER TABLE IF EXISTS public.cyclists
     ADD CONSTRAINT fk_coach FOREIGN KEY ("coachID")
     REFERENCES public.coaches ("coachID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
+
 
 ALTER TABLE IF EXISTS public.memberships
     ADD CONSTRAINT "memberships_organizationsID_fkey" FOREIGN KEY ("organizationsID")
@@ -144,12 +172,20 @@ ALTER TABLE IF EXISTS public.memberships
     ON DELETE NO ACTION
     NOT VALID;
 
-ALTER TABLE IF EXISTS public.performance_metrics
-    ADD CONSTRAINT "performance_metrics_sessionsID_fkey" FOREIGN KEY ("sessionsID")
-    REFERENCES public.training_sessions ("sessionsID") MATCH SIMPLE
+
+ALTER TABLE IF EXISTS public.training_plan_templates
+    ADD CONSTRAINT training_plan_templates_planid_fkey FOREIGN KEY ("planID")
+    REFERENCES public.training_plans ("plansID") MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.training_plans
+    ADD CONSTRAINT "training_plans_coachID_fkey" FOREIGN KEY ("coachID")
+    REFERENCES public.coaches ("coachID") MATCH SIMPLE
     ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+    ON DELETE NO ACTION;
+
 
 ALTER TABLE IF EXISTS public.training_sessions
     ADD CONSTRAINT "training_sessions_cyclistID_fkey" FOREIGN KEY ("cyclistID")
@@ -157,11 +193,13 @@ ALTER TABLE IF EXISTS public.training_sessions
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
 
+
 ALTER TABLE IF EXISTS public.user_equipment
     ADD CONSTRAINT "user_equipment_cyclistID_fkey" FOREIGN KEY ("cyclistID")
     REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE;
+
 
 ALTER TABLE IF EXISTS public.user_equipment
     ADD CONSTRAINT "user_equipment_equipmentID_fkey" FOREIGN KEY ("equipmentID")
