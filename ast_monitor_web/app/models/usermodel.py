@@ -8,17 +8,20 @@ class Coach(db.Model):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
+    profile_picture = Column(String(255), nullable=True)
 
-    def __init__(self, username, password, email):
+    def __init__(self, username, password, email, profile_picture=None):
         self.username = username
         self.password = password
         self.email = email
+        self.profile_picture = profile_picture
 
     def to_dict(self):
         return {
             'coachID': self.coachID,
             'username': self.username,
-            'email': self.email
+            'email': self.email,
+            'profile_picture': self.profile_picture if self.profile_picture else 'photos/profilePictures/blankProfilePic.png'
         }
 
 class Cyclist(db.Model):
@@ -32,10 +35,11 @@ class Cyclist(db.Model):
     date_of_birth = Column(Date)
     height_cm = Column(Integer)
     weight_kg = Column(Integer)
+    profile_picture = Column(String(255), nullable=True)
 
     coach = db.relationship('Coach', backref=db.backref('cyclists', lazy=True))
 
-    def __init__(self, coachID, username, password, email, date_of_birth=None, height_cm=None, weight_kg=None):
+    def __init__(self, coachID, username, password, email, date_of_birth=None, height_cm=None, weight_kg=None, profile_picture=None):
         self.coachID = coachID
         self.username = username
         self.password = password
@@ -43,6 +47,7 @@ class Cyclist(db.Model):
         self.date_of_birth = date_of_birth
         self.height_cm = height_cm
         self.weight_kg = weight_kg
+        self.profile_picture = profile_picture
 
     def to_dict(self):
         return {
@@ -52,5 +57,6 @@ class Cyclist(db.Model):
             'email': self.email,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
             'height_cm': self.height_cm,
-            'weight_kg': self.weight_kg
+            'weight_kg': self.weight_kg,
+            'profile_picture': self.profile_picture if self.profile_picture else 'photos/profilePictures/blankProfilePic.png'
         }

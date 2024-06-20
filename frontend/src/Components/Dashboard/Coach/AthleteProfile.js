@@ -135,7 +135,8 @@ const AthleteProfile = ({ token }) => {
     return (
         <div className="athlete-profile-container">
             <div className="athlete-profile">
-                <h2>{athleteData.username}'s Profile</h2>
+                <h2>{athleteData.username}'s training history calendar</h2>
+                <p>Blue dot under a day's number on the calendar represents that there was a training on that day</p>
                 <Calendar
                     onChange={onDayClick}
                     value={new Date()}

@@ -1,10 +1,13 @@
 import os
+import uuid
 
 from flask import request, jsonify, Blueprint, url_for, redirect, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
+from werkzeug.utils import secure_filename
+
 from ..models.usermodel import db, Coach, Cyclist
 from ..__init__ import mail
 from sqlalchemy.exc import IntegrityError
@@ -165,3 +168,50 @@ def get_all_coaches():
         return jsonify([coach.to_dict() for coach in coaches]), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
+
+
+@auth_bp.route('/upload_profile_picture', methods=['POST'])
+@jwt_required()
+def upload_profile_picture():
+    if 'profile_picture' not in request.files:
+        return jsonify({"message": "No file part"}), 400
+
+    file = request.files['profile_picture']
+    if file.filename == '':
+        return jsonify({"message": "No selected file"}), 400
+
+    if file and allowed_file(file.filename):
+        identity = get_jwt_identity()
+        user_id = identity['user_id']
+        role = identity['role']
+        user = Coach.query.filter_by(coachID=user_id).first() if role == 'coach' else Cyclist.query.filter_by(
+            cyclistID=user_id).first()
+
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+
+        filename = secure_filename(file.filename)
+        extension = filename.rsplit('.', 1)[1].lower()
+        new_filename = f"{role}_{uuid.uuid4().hex}.{extension}"
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'photos/profilePictures', new_filename)
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        if user.profile_picture:
+            old_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'photos/profilePictures', user.profile_picture)
+            if os.path.exists(old_file_path):
+                os.remove(old_file_path)
+
+        file.save(file_path)
+        user.profile_picture = f'photos/profilePictures/{new_filename}'
+        db.session.commit()
+        return jsonify({"message": "Profile picture uploaded successfully", "profile_picture": new_filename}), 200
+
+    return jsonify({"message": "Invalid file format"}), 400
+
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
