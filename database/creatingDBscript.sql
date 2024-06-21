@@ -83,7 +83,6 @@ CREATE TABLE IF NOT EXISTS public.training_plan_templates
 (
     "sessionID" serial NOT NULL,
     "planID" integer,
-    date timestamp without time zone NOT NULL,
     type character varying(50) COLLATE pg_catalog."default" NOT NULL,
     duration interval NOT NULL,
     distance numeric NOT NULL,
@@ -98,6 +97,7 @@ CREATE TABLE IF NOT EXISTS public.training_plans
     "coachID" integer NOT NULL,
     start_date timestamp without time zone NOT NULL,
     description text COLLATE pg_catalog."default",
+    executed character varying(3) COLLATE pg_catalog."default" DEFAULT 'No'::character varying,
     CONSTRAINT training_plans_pkey PRIMARY KEY ("plansID")
 );
 

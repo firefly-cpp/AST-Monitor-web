@@ -28,7 +28,12 @@ def parse_duration(duration_str):
         h, m, s = map(int, duration_str.split(':'))
         return timedelta(hours=h, minutes=m, seconds=s)
     except ValueError:
-        raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS'")
+        try:
+            return timedelta(minutes=int(duration_str))
+        except ValueError:
+            raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS' or 'minutes'")
+
+
 
 @coach_bp.route('/athletes', methods=['GET'])
 @jwt_required()
@@ -148,7 +153,6 @@ def get_sessions_for_calendar(id):
 
     return jsonify(session_dates)
 
-
 @coach_bp.route('/create_training_plan', methods=['POST'])
 @jwt_required()
 def create_training_plan():
@@ -165,17 +169,16 @@ def create_training_plan():
         training_plan = TrainingPlan(
             coachID=coach_id,
             start_date=start_date,
-            description=description
+            description=description,
+            executed='No'  # Set executed to 'No' when creating a new plan
         )
         db.session.add(training_plan)
         db.session.commit()
 
         for session_data in data['sessions']:
-            session_date = parse_datetime(session_data['date'])
             session_duration = parse_duration(session_data['duration'])
             new_session = TrainingPlanTemplate(
                 planID=training_plan.plansID,
-                date=session_date,
                 type=session_data['type'],
                 duration=session_duration,
                 distance=session_data['distance'],
@@ -235,13 +238,12 @@ def create_training_plan_template():
 
     try:
         new_template = TrainingPlanTemplate(
-            date=parse_datetime(data['date']),
             type=data['type'],
             duration=parse_duration(data['duration']),
             distance=data['distance'],
             intensity=data.get('intensity'),
             notes=data.get('notes'),
-            planID=None  # Assuming templates are created without associating a specific plan initially
+            planID=None
         )
         db.session.add(new_template)
         db.session.commit()
@@ -250,3 +252,19 @@ def create_training_plan_template():
         logging.error(f"Error creating training plan template: {str(e)}")
         db.session.rollback()
         return jsonify({"error": f"Error creating training plan template: {str(e)}"}), 500
+
+@coach_bp.route('/delete_training_plan_template/<int:template_id>', methods=['DELETE'])
+@jwt_required()
+def delete_training_plan_template(template_id):
+    try:
+        template = TrainingPlanTemplate.query.get(template_id)
+        if not template:
+            return jsonify({"error": "Training plan template not found"}), 404
+
+        db.session.delete(template)
+        db.session.commit()
+        return jsonify({"message": "Training plan template deleted successfully"}), 200
+    except Exception as e:
+        logging.error(f"Error deleting training plan template: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": f"Error deleting training plan template: {str(e)}"}), 500

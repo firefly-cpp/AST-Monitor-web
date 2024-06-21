@@ -6,6 +6,8 @@ import pandas as pd
 from flask import jsonify, Blueprint, make_response, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sport_activities_features import HillIdentification, TopographicFeatures
+
+from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Cyclist
 from niaarm import Dataset, get_rules
@@ -182,3 +184,56 @@ def get_session_details(session_id):
     except Exception as e:
         logging.error(f"Error fetching session details: {str(e)}")
         return jsonify({"error": "Error fetching session details"}), 500
+
+
+
+@cyclist_bp.route('/training_plans', methods=['GET'])
+@jwt_required()
+def get_cyclist_training_plans():
+    identity = get_jwt_identity()
+    current_user_id = identity['user_id']
+    current_user_role = identity['role']
+
+    if current_user_role != 'cyclist':
+        return jsonify({"message": "Access denied"}), 403
+
+    try:
+        training_plans = db.session.query(TrainingPlan).join(CyclistTrainingPlan).filter(
+            CyclistTrainingPlan.cyclistID == current_user_id,
+            TrainingPlan.executed == 'No'
+        ).all()
+
+        plans_data = [plan.to_dict() for plan in training_plans]
+
+        return jsonify(plans_data), 200
+    except Exception as e:
+        logging.error(f"Error fetching training plans: {str(e)}")
+        return jsonify({"error": "Error fetching training plans"}), 500
+
+@cyclist_bp.route('/training_plans/<int:plan_id>/execute', methods=['POST'])
+@jwt_required()
+def execute_training_plan(plan_id):
+    identity = get_jwt_identity()
+    current_user_id = identity['user_id']
+    current_user_role = identity['role']
+
+    if current_user_role != 'cyclist':
+        return jsonify({"message": "Access denied"}), 403
+
+    try:
+        training_plan = db.session.query(TrainingPlan).join(CyclistTrainingPlan).filter(
+            CyclistTrainingPlan.cyclistID == current_user_id,
+            TrainingPlan.plansID == plan_id
+        ).first()
+
+        if not training_plan:
+            return jsonify({"error": "Training plan not found"}), 404
+
+        training_plan.executed = 'Yes'
+        db.session.commit()
+
+        return jsonify({"message": "Training plan executed successfully"}), 200
+    except Exception as e:
+        logging.error(f"Error executing training plan: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": f"Error executing training plan: {str(e)}"}), 500

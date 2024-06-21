@@ -10,6 +10,8 @@ import '../../Styles/Dashboard.css';
 import HistoryCalendar from "./HistoryCalendar";
 import CreateTrainingPlan from "./Coach/CreateTrainingPlan";
 import ImportPreview from "./Coach/ImportPreview";
+import CyclistTrainingPlans from "./CyclistTrainingPlans";
+import StartTrainingSession from "./StartTrainingSession";
 
 const Dashboard = ({ role, token }) => {
     return (
@@ -31,6 +33,8 @@ const Dashboard = ({ role, token }) => {
                             <Route path="/calendar/:sessionId" element={<HistoryCalendar token={token} />} />
                             <Route path="/performance" element={<PerformanceAnalytics token={token} />} />
                             <Route path="/health" element={<HealthMonitoring token={token} />} />
+                            <Route path="/training-plans" element={<CyclistTrainingPlans token={token} />} />
+                            <Route path="/start-training/:planId" element={<StartTrainingSession token={token} />} />
                             <Route path="*" element={<Navigate to="/calendar" />} />
                         </>
                     )}
