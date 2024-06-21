@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import requests
-import pandas as pd
 from flask import jsonify, Blueprint, make_response, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sport_activities_features import HillIdentification, TopographicFeatures
@@ -15,6 +14,11 @@ cyclist_bp = Blueprint('cyclist_bp', __name__)
 
 WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
 WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
+
+RULES_FILE_PATH = './csv/generated_rules.json'
+
+HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
+HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
 
 @cyclist_bp.route('/run_niaarm', methods=['POST', 'OPTIONS'])
 @jwt_required()
@@ -30,11 +34,8 @@ def run_niaarm():
             return jsonify({"message": "Access denied"}), 403
 
         try:
-            # Path to your CSV file
-            # csv_file_path = './csv/treci.csv'
-            csv_file_path = 'C:/Users/Vanja/Desktop/Projekt/CsvData/drugi.csv'
+            csv_file_path = './csv/treci.csv'
 
-            # Log the working directory and file path
             current_app.logger.info(f"Current working directory: {os.getcwd()}")
             current_app.logger.info(f"Using CSV file at path: {csv_file_path}")
             absolute_csv_file_path = os.path.abspath(csv_file_path)
@@ -44,26 +45,32 @@ def run_niaarm():
                 current_app.logger.error(f"CSV file not found at path: {absolute_csv_file_path}")
                 return jsonify({"error": "CSV file not found"}), 404
 
-            # Load dataset
             dataset = Dataset(absolute_csv_file_path)
-
-            # Use Differential Evolution algorithm for rule mining
             algo = DifferentialEvolution(population_size=50, differential_weight=0.5, crossover_probability=0.9)
             metrics = ('support', 'confidence')
 
-            # Get rules
             rules, run_time = get_rules(dataset, algo, metrics, max_iters=30, logging=True)
 
-            # Convert rules to JSON serializable format
             rules_json = []
             for rule in rules:
                 rule_dict = {
-                    "lhs": [str(feature) for feature in rule.antecedent] if hasattr(rule, 'antecedent') else None,  # left-hand side
-                    "rhs": [str(feature) for feature in rule.consequent] if hasattr(rule, 'consequent') else None,  # right-hand side
+                    "lhs": [str(feature) for feature in rule.antecedent] if hasattr(rule, 'antecedent') else None,
+                    "rhs": [str(feature) for feature in rule.consequent] if hasattr(rule, 'consequent') else None,
                     "support": getattr(rule, 'support', None),
                     "confidence": getattr(rule, 'confidence', None)
                 }
                 rules_json.append(rule_dict)
+
+            if os.path.exists(RULES_FILE_PATH):
+                with open(RULES_FILE_PATH, 'r') as f:
+                    existing_rules = json.load(f)
+            else:
+                existing_rules = []
+
+            existing_rules.extend(rules_json)
+
+            with open(RULES_FILE_PATH, 'w') as f:
+                json.dump(existing_rules, f)
 
             return jsonify({"rules": rules_json, "run_time": run_time})
         except Exception as e:
@@ -124,7 +131,6 @@ def get_session_details(session_id):
         if not session:
             return jsonify({"message": "Session not found"}), 404
 
-        # Get weather data
         weather_data = {}
         if session.positions:
             start_position = json.loads(session.positions)[0]
@@ -139,7 +145,6 @@ def get_session_details(session_id):
                     "humidity": day_weather.get('avghumidity')
                 }
 
-        # Hill identification
         altitudes = json.loads(session.altitudes)
         hills = HillIdentification(altitudes, 30)
         hills.identify_hills()
@@ -182,3 +187,108 @@ def get_session_details(session_id):
     except Exception as e:
         logging.error(f"Error fetching session details: {str(e)}")
         return jsonify({"error": "Error fetching session details"}), 500
+
+@cyclist_bp.route('/get_saved_rules', methods=['GET'])
+@jwt_required()
+def get_saved_rules():
+    try:
+        if not os.path.exists(RULES_FILE_PATH):
+            return jsonify({"error": "Rules file not found"}), 404
+
+        with open(RULES_FILE_PATH, 'r') as f:
+            rules_json = json.load(f)
+
+        return jsonify({"rules": rules_json})
+    except Exception as e:
+        current_app.logger.error(f"Error fetching saved rules: {str(e)}")
+        return jsonify({"error": f"Error fetching saved rules: {str(e)}"}), 500
+
+def extract_heart_rate_rules(rules):
+    hr_metrics = ['hr_max', 'hr_avg', 'hr_min']
+    hr_rules = [rule for rule in rules if any(metric in str(rule['rhs']) for metric in hr_metrics)]
+    return hr_rules
+
+def check_session_against_rules(session_data, rules):
+    warnings = []
+
+    for rule in rules:
+        lhs_conditions = rule['lhs']
+        match = True
+
+        for condition in lhs_conditions:
+            if 'hr_max' in condition:
+                value_range = extract_range(condition)
+                if not (value_range[0] <= session_data['hr_max'] <= value_range[1]):
+                    match = False
+            elif 'hr_avg' in condition:
+                value_range = extract_range(condition)
+                if not (value_range[0] <= session_data['hr_avg'] <= value_range[1]):
+                    match = False
+            elif 'hr_min' in condition:
+                value_range = extract_range(condition)
+                if not (value_range[0] <= session_data['hr_min'] <= value_range[1]):
+                    match = False
+
+        if match:
+            warning_message = interpret_warning(rule)
+            warnings.append(warning_message)
+
+    return warnings
+
+def interpret_warning(rule):
+    lhs_descriptions = " AND ".join(rule['lhs'])
+    rhs_descriptions = " AND ".join(rule['rhs'])
+    additional_text = ""
+
+    # Check if heart rate values in the rule exceed thresholds
+    for condition in rule['rhs']:
+        if 'hr_max' in condition:
+            value_range = extract_range(condition)
+            if value_range[1] > HR_MAX_THRESHOLD:
+                additional_text += " Your maximum heart rate is too high."
+        elif 'hr_min' in condition:
+            value_range = extract_range(condition)
+            if value_range[0] < HR_MIN_THRESHOLD:
+                additional_text += " Your minimum heart rate is too low."
+
+    return f"Warning: If {lhs_descriptions}, then {rhs_descriptions}. This could indicate potential health risks based on your recent session data. Please monitor your health metrics closely.{additional_text}"
+
+def extract_range(condition):
+    import re
+    match = re.search(r'\[(.*),(.*)\]', condition)
+    return float(match.group(1)), float(match.group(2))
+
+@cyclist_bp.route('/check_session', methods=['POST', 'OPTIONS'])
+@jwt_required()
+def check_session():
+    if request.method == 'OPTIONS':
+        return build_cors_preflight_response()
+    elif request.method == 'POST':
+        identity = get_jwt_identity()
+        current_user_id = identity['user_id']
+        current_user_role = identity['role']
+
+        if current_user_role != 'cyclist':
+            return jsonify({"message": "Access denied"}), 403
+
+        try:
+            session_data = request.json
+            current_app.logger.info(f"Session Data: {session_data}")
+
+            if not os.path.exists(RULES_FILE_PATH):
+                return jsonify({"error": "Rules file not found"}), 404
+
+            with open(RULES_FILE_PATH, 'r') as f:
+                rules = json.load(f)
+            current_app.logger.info(f"Checking against Rules: {rules}")
+
+            hr_rules = extract_heart_rate_rules(rules)
+            current_app.logger.info(f"Extracted Heart Rate Rules: {hr_rules}")
+
+            warnings = check_session_against_rules(session_data, hr_rules)
+            current_app.logger.info(f"Warnings: {warnings}")
+
+            return jsonify({"warnings": warnings})
+        except Exception as e:
+            current_app.logger.error(f"Error checking session: {str(e)}")
+            return jsonify({"error": f"Error checking session: {str(e)}"}), 500
