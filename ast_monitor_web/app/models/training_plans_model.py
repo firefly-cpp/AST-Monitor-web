@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, Interval, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, Interval, DateTime, Text, VARCHAR
 from sqlalchemy.orm import relationship
 from .database import db
 
@@ -9,6 +9,7 @@ class TrainingPlan(db.Model):
     coachID = Column(Integer, ForeignKey('coaches.coachID'), nullable=False)
     start_date = Column(DateTime, nullable=False)
     description = Column(Text, nullable=True)
+    executed = Column(VARCHAR(3), nullable=False, default='No')
 
     coach = relationship('Coach', backref=db.backref('training_plans', lazy=True))
     sessions = relationship('TrainingPlanTemplate', backref='training_plan', cascade="all, delete-orphan")
@@ -19,6 +20,7 @@ class TrainingPlan(db.Model):
             'coachID': self.coachID,
             'start_date': self.start_date.isoformat(),
             'description': self.description,
+            'executed': self.executed,  # Added executed attribute to dict
             'sessions': [session.to_dict() for session in self.sessions]
         }
 
@@ -44,7 +46,6 @@ class TrainingPlanTemplate(db.Model):
 
     sessionID = Column(Integer, primary_key=True)
     planID = Column(Integer, ForeignKey('training_plans.plansID'), nullable=False)
-    date = Column(DateTime, nullable=False)
     type = Column(String(50), nullable=False)
     duration = Column(Interval, nullable=False)
     distance = Column(Numeric, nullable=False)
@@ -55,7 +56,6 @@ class TrainingPlanTemplate(db.Model):
         return {
             'sessionID': self.sessionID,
             'planID': self.planID,
-            'date': self.date.isoformat(),
             'type': self.type,
             'duration': str(self.duration),
             'distance': float(self.distance),
