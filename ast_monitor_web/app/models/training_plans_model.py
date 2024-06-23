@@ -45,7 +45,7 @@ class TrainingPlanTemplate(db.Model):
     __tablename__ = 'training_plan_templates'
 
     sessionID = Column(Integer, primary_key=True)
-    planID = Column(Integer, ForeignKey('training_plans.plansID'), nullable=False)
+    planID = Column(Integer, ForeignKey('training_plans.plansID'), nullable=True)
     type = Column(String(50), nullable=False)
     duration = Column(Interval, nullable=False)
     distance = Column(Numeric, nullable=False)

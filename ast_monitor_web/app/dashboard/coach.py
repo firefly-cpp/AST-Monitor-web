@@ -25,13 +25,22 @@ def parse_datetime(datetime_str):
 
 def parse_duration(duration_str):
     try:
+        # Trying to parse durations that include days
+        parts = duration_str.split(", ")
+        if len(parts) == 2:
+            days, time = parts
+            days = int(days.split()[0])  # extract the integer before 'days'
+            h, m, s = map(int, time.split(":"))
+            return timedelta(days=days, hours=h, minutes=m, seconds=s)
+        # Standard HH:MM:SS format
         h, m, s = map(int, duration_str.split(':'))
         return timedelta(hours=h, minutes=m, seconds=s)
     except ValueError:
+        # Handling durations in minutes
         try:
             return timedelta(minutes=int(duration_str))
         except ValueError:
-            raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS' or 'minutes'")
+            raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS', 'X days, HH:MM:SS' or 'minutes'")
 
 
 
@@ -201,7 +210,8 @@ def create_training_plan():
 
         db.session.commit()
 
-        return jsonify({"message": "Training plan created successfully"}), 201
+        return jsonify({"message": "Training plan created successfully", "plansID": training_plan.plansID}), 201
+
     except Exception as e:
         logging.error(f"Error creating training plan: {str(e)}")
         db.session.rollback()

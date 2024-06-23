@@ -5,4 +5,11 @@
     <orderEntry type="jdk" jdkName="Poetry (AST-Monitor_web) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/ast_monitor_web" />
+      </list>
+    </option>
+  </component>
 </module>

@@ -18,7 +18,6 @@ const Login = ({ onLogin }) => {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('role', response.data.role);
       onLogin(response.data.access_token, response.data.role);
-      alert('Login successful');
       navigate('/dashboard');
     } catch (error) {
       alert('Login failed: ' + error.response.data.message);

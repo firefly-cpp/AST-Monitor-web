@@ -49,7 +49,6 @@ const Register = ({ onRegister }) => {
       const { data } = await axios.post(`http://localhost:5000/auth/${endpoint}`, userData);
       localStorage.setItem('token', data.access_token);
       onRegister(data.access_token, role);
-      alert('Registration successful');
       navigate('/login'); // Redirect to the login page after successful registration
     } catch (error) {
       console.error('Registration failed:', error.response);

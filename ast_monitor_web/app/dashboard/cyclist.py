@@ -17,7 +17,7 @@ cyclist_bp = Blueprint('cyclist_bp', __name__)
 WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
 WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
 
-RULES_FILE_PATH = './csv/generated_rules.json'
+RULES_FILE_PATH = 'ast_monitor_web/csv/generated_rules.json'
 
 HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
 HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
@@ -36,7 +36,7 @@ def run_niaarm():
             return jsonify({"message": "Access denied"}), 403
 
         try:
-            csv_file_path = './csv/treci.csv'
+            csv_file_path = 'ast_monitor_web/csv/treci.csv'
 
             current_app.logger.info(f"Current working directory: {os.getcwd()}")
             current_app.logger.info(f"Using CSV file at path: {csv_file_path}")
