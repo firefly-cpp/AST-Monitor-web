@@ -36,6 +36,7 @@
     min-width: 300px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    position: relative; /* Add this to ensure the delete icon is positioned relative to the card */
 }
 
 .training-plan-card:hover {
@@ -89,4 +90,19 @@
 .start-training-button:hover:enabled {
     background-color: #45a049;
     transform: scale(1.05);
+}
+
+.training-plan-card .delete-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.training-plan-card .delete-icon:hover {
+    transform: scale(1.2);
+    filter: invert(24%) sepia(78%) saturate(6234%) hue-rotate(356deg) brightness(106%) contrast(101%);
 }

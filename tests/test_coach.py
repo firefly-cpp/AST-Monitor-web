@@ -1,3 +1,4 @@
+import json
 import unittest
 import random
 import string
@@ -57,10 +58,10 @@ class TestCoachRoutes(TestCase):
             hr_avg=120,
             total_distance=30,
             start_time=datetime.now(),
-            altitudes='[]',
-            heartrates='[]',
-            speeds='[]',
-            positions='[]'
+            altitudes=json.dumps([100, 200, 300]),  # Example altitude data
+            heartrates=json.dumps([110, 115, 120]),  # Example heart rate data
+            speeds=json.dumps([20, 25, 30]),  # Example speed data
+            positions=json.dumps([[45.0, 45.0], [46.0, 46.0]])  # Example position data
         )
         db.session.add(session)
         db.session.commit()

@@ -22,9 +22,6 @@ const Sidebar = ({ role }) => {
                 ) : (
                     <>
                         <li>
-                            <NavLink to="/dashboard/performance">Performance Analytics</NavLink>
-                        </li>
-                        <li>
                             <NavLink to="/dashboard/history">Training History</NavLink>
                         </li>
                         <li>
@@ -32,6 +29,9 @@ const Sidebar = ({ role }) => {
                         </li>
                         <li>
                             <NavLink to="/dashboard/training-plans">Training Plans</NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/dashboard/import-preview">Import and Preview Training</NavLink>
                         </li>
                     </>
                 )}

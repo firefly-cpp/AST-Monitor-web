@@ -17,7 +17,20 @@ cyclist_bp = Blueprint('cyclist_bp', __name__)
 WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
 WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
 
-RULES_FILE_PATH = 'ast_monitor_web/csv/generated_rules.json'
+RULES_FILE_PATH = 'csv/generated_rules.json'
+
+HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
+HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
+
+cyclist_bp = Blueprint('cyclist_bp', __name__)
+
+WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
+WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
+
+# Update paths to be relative to the project root
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
+RULES_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/generated_rules.json')
+CSV_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/treci.csv')
 
 HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
 HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
@@ -36,11 +49,9 @@ def run_niaarm():
             return jsonify({"message": "Access denied"}), 403
 
         try:
-            csv_file_path = 'ast_monitor_web/csv/treci.csv'
-
             current_app.logger.info(f"Current working directory: {os.getcwd()}")
-            current_app.logger.info(f"Using CSV file at path: {csv_file_path}")
-            absolute_csv_file_path = os.path.abspath(csv_file_path)
+            current_app.logger.info(f"Using CSV file at path: {CSV_FILE_PATH}")
+            absolute_csv_file_path = os.path.abspath(CSV_FILE_PATH)
             current_app.logger.info(f"Absolute CSV file path: {absolute_csv_file_path}")
 
             if not os.path.exists(absolute_csv_file_path):
@@ -95,7 +106,6 @@ def get_weather_data(lat, lon, start_time):
     weather_data = response.json()
     logging.info(f"Weather data response: {weather_data}")
     return weather_data
-
 @cyclist_bp.route('/sessions', methods=['GET'])
 @jwt_required()
 def get_cyclist_sessions():
@@ -164,6 +174,7 @@ def get_session_details(session_id):
         }
 
         session_data = {
+            "sessionsID": session.sessionsID,
             "altitude_avg": float(session.altitude_avg) if session.altitude_avg else None,
             "altitude_max": float(session.altitude_max) if session.altitude_max else None,
             "altitude_min": float(session.altitude_min) if session.altitude_min else None,
@@ -347,3 +358,35 @@ def execute_training_plan(plan_id):
         logging.error(f"Error executing training plan: {str(e)}")
         db.session.rollback()
         return jsonify({"error": f"Error executing training plan: {str(e)}"}), 500
+
+
+@cyclist_bp.route('/training_plans/<int:plan_id>', methods=['DELETE'])
+@jwt_required()
+def delete_training_plan(plan_id):
+    identity = get_jwt_identity()
+    current_user_id = identity['user_id']
+    current_user_role = identity['role']
+
+    if current_user_role != 'cyclist':
+        return jsonify({"message": "Access denied"}), 403
+
+    try:
+        # First, find and delete all records in CyclistTrainingPlan related to this plan
+        cyclist_training_plans = CyclistTrainingPlan.query.filter_by(plansID=plan_id).all()
+        for ctp in cyclist_training_plans:
+            db.session.delete(ctp)
+
+        # Then, find and delete the training plan itself
+        training_plan = TrainingPlan.query.filter_by(plansID=plan_id).first()
+        if not training_plan:
+            return jsonify({"error": "Training plan not found"}), 404
+
+        db.session.delete(training_plan)
+        db.session.commit()
+
+        return jsonify({"message": "Training plan deleted successfully"}), 200
+    except Exception as e:
+        logging.error(f"Error deleting training plan: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": f"Error deleting training plan: {str(e)}"}), 500
+

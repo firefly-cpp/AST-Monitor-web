@@ -21,6 +21,7 @@ const CreateTrainingPlan = ({ token }) => {
     });
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
+    const [selectAll, setSelectAll] = useState(false);
 
     useEffect(() => {
         axios.get('http://localhost:5000/coach/athletes', { headers: { Authorization: `Bearer ${token}` } })
@@ -91,14 +92,23 @@ const CreateTrainingPlan = ({ token }) => {
     };
 
     const handleDeleteTemplate = async (templateID) => {
-        try {
-            await axios.delete(`http://localhost:5000/coach/delete_training_plan_template/${templateID}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setTemplates(templates.filter(template => template.sessionID !== templateID));
-        } catch (error) {
-            console.error("There was an error deleting the template!", error);
+        const confirmDelete = window.confirm("Are you sure you want to delete this template?");
+        if (confirmDelete) {
+            try {
+                await axios.delete(`http://localhost:5000/coach/delete_training_plan_template/${templateID}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setTemplates(templates.filter(template => template.sessionID !== templateID));
+            } catch (error) {
+                console.error("There was an error deleting the template!", error);
+            }
         }
+    };
+
+    const handleSelectAllCyclists = (e) => {
+        const { checked } = e.target;
+        setSelectAll(checked);
+        setSelectedCyclists(checked ? cyclists.map(cyclist => cyclist.cyclistID.toString()) : []);
     };
 
     const handleSubmit = (e) => {
@@ -130,12 +140,23 @@ const CreateTrainingPlan = ({ token }) => {
                 <fieldset className="form-fieldset">
                     <legend>Select Cyclists</legend>
                     <div className="cyclist-list">
+                        <label className="cyclist-item select-all-container">
+                            <input
+                                type="checkbox"
+                                name="selectAll"
+                                checked={selectAll}
+                                onChange={handleSelectAllCyclists}
+                                className="form-checkbox"
+                            />
+                            <span>Select all</span>
+                        </label>
                         {cyclists.map(cyclist => (
                             <label key={cyclist.cyclistID} className="cyclist-item">
                                 <input
                                     type="checkbox"
                                     name="cyclist_ids"
                                     value={cyclist.cyclistID}
+                                    checked={selectedCyclists.includes(cyclist.cyclistID.toString())}
                                     onChange={handleCheckboxChange}
                                     className="form-checkbox"
                                 />
@@ -156,7 +177,10 @@ const CreateTrainingPlan = ({ token }) => {
                                 <p>Distance: {template.distance} km</p>
                                 <p>Intensity (Heartrate range): {template.intensity}</p>
                                 <p>Notes: {template.notes}</p>
-                                <img src={thrashIcon} alt="Delete" className="delete-icon" onClick={() => handleDeleteTemplate(template.sessionID)} />
+                                <img src={thrashIcon} alt="Delete" className="delete-icon" onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteTemplate(template.sessionID);
+                                }} />
                             </div>
                         ))}
                     </div>

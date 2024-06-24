@@ -6,7 +6,7 @@
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    width: 90%;
+    width: 100%;
     max-width: 1200px;
     margin: 20px auto;
     text-align: center;
@@ -18,7 +18,7 @@
     transform: translateY(-10px);
 }
 
-.import-preview-container h2, .import-preview-container h3, .import-preview-container h4 {
+.import-preview-container h2 {
     margin-bottom: 10px;
     font-size: 28px;
     color: #333;

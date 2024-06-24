@@ -9,7 +9,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     loader = unittest.TestLoader()
-    # suite = loader.discover('tests', pattern='test_cyclist.py')
+    # suite = loader.discover('tests', pattern='test_coach.py')
     suite = loader.discover('tests')
     runner = unittest.TextTestRunner()
     runner.run(suite)

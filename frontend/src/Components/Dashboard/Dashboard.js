@@ -1,11 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import PerformanceAnalytics from './PerformanceAnalytics';
 import HealthMonitoring from './HealthMonitoring';
 import AthleteOverview from './Coach/AthleteOverview';
 import AthleteProfile from './Coach/AthleteProfile';
-import PreviewImportedTraining from './Coach/ImportPreview';
 import '../../Styles/Dashboard.css';
 import HistoryCalendar from "./HistoryCalendar";
 import CreateTrainingPlan from "./Coach/CreateTrainingPlan";
@@ -31,10 +29,10 @@ const Dashboard = ({ role, token }) => {
                         <>
                             <Route path="/calendar" element={<HistoryCalendar token={token} />} />
                             <Route path="/calendar/:sessionId" element={<HistoryCalendar token={token} />} />
-                            <Route path="/performance" element={<PerformanceAnalytics token={token} />} />
                             <Route path="/health" element={<HealthMonitoring token={token} />} />
                             <Route path="/training-plans" element={<CyclistTrainingPlans token={token} />} />
                             <Route path="/start-training/:planId" element={<StartTrainingSession token={token} />} />
+                            <Route path="/import-preview" element={<ImportPreview token={token} />} />
                             <Route path="*" element={<Navigate to="/calendar" />} />
                         </>
                     )}

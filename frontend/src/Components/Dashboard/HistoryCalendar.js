@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Line, Pie, Doughnut } from 'react-chartjs-2';
 import Calendar from 'react-calendar';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -100,60 +100,81 @@ const HistoryCalendar = ({ token }) => {
         }],
     });
 
-    const getSpeedVsHeartRateData = () => {
-        if (!selectedSession || !selectedSession.timestamps || !selectedSession.speeds || !selectedSession.heartrates) {
-            return { labels: [], datasets: [] };
+    const getHillData = () => {
+    if (!selectedSession || !selectedSession.hill_data) {
+        return { labels: [], datasets: [] };
+    }
+    const { num_hills, avg_altitude, avg_ascent, distance_hills, hills_share } = selectedSession.hill_data;
+    return {
+        labels: ['Number of Hills', 'Avg Altitude (m)', 'Avg Ascent (m)', 'Distance Hills (km)', 'Hills Share (%)'],
+        datasets: [
+            {
+                label: 'Hill Data',
+                data: [
+                    num_hills,
+                    avg_altitude,
+                    avg_ascent,
+                    distance_hills,
+                    hills_share * 100,
+                ],
+                backgroundColor: [
+                    'rgba(75,192,192,0.6)',
+                    'rgba(75,75,192,0.6)',
+                    'rgba(192,75,75,0.6)',
+                    'rgba(75,192,75,0.6)',
+                    'rgba(192,192,75,0.6)',
+                ],
+                borderWidth: 1
+            },
+        ],
+    };
+};
+
+    const generatePDFReport = (selectedSession, token) => {
+        if (!selectedSession) {
+            console.error('No session selected');
+            return;
         }
-        return {
-            labels: selectedSession.timestamps.map(ts => new Date(ts).toLocaleTimeString()), // format timestamps to readable time
-            datasets: [
-                {
-                    label: 'Speed (km/h)',
-                    data: selectedSession.speeds.map(speed => (speed !== null && speed !== undefined) ? parseFloat(speed.toFixed(2)) : speed),
-                    borderColor: 'rgba(75,192,192,1)',
-                    backgroundColor: 'rgba(75,192,192,0.2)',
-                    yAxisID: 'y1',
-                    fill: false,
-                },
-                {
-                    label: 'Heart Rate (bpm)',
-                    data: selectedSession.heartrates.map(hr => (hr !== null && hr !== undefined) ? parseFloat(hr.toFixed(2)) : hr),
-                    borderColor: 'rgba(255,99,132,1)',
-                    backgroundColor: 'rgba(255,99,132,0.2)',
-                    yAxisID: 'y2',
-                    fill: false,
-                },
-            ],
-        };
+
+        axios.get(`http://localhost:5000/import_export/athlete/session/${selectedSession.sessionsID}/export_pdf`, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+        })
+        .then(response => {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `session_report_${new Date(selectedSession.start_time).toLocaleDateString()}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+        })
+        .catch(error => {
+            console.error('Error generating PDF report:', error);
+        });
     };
 
-    const getHillData = () => {
-        if (!selectedSession || !selectedSession.hill_data) {
-            return { labels: [], datasets: [] };
+    const exportSessionData = (format) => {
+        if (!selectedSession) {
+            console.error('No session selected');
+            return;
         }
-        const { num_hills, avg_altitude, avg_ascent, distance_hills, hills_share } = selectedSession.hill_data;
-        return {
-            labels: ['Number of Hills', 'Avg Altitude (m)', 'Avg Ascent (m)', 'Distance Hills (km)', 'Hills Share (%)'],
-            datasets: [
-                {
-                    label: 'Hill Data',
-                    data: [
-                        (num_hills !== null && num_hills !== undefined) ? parseFloat(num_hills.toFixed(2)) : num_hills,
-                        (avg_altitude !== null && avg_altitude !== undefined) ? parseFloat(avg_altitude.toFixed(2)) : avg_altitude,
-                        (avg_ascent !== null && avg_ascent !== undefined) ? parseFloat(avg_ascent.toFixed(2)) : avg_ascent,
-                        (distance_hills !== null && distance_hills !== undefined) ? parseFloat(distance_hills.toFixed(2)) : distance_hills,
-                        (hills_share !== null && hills_share !== undefined) ? parseFloat((hills_share * 100).toFixed(2)) : hills_share
-                    ],
-                    backgroundColor: [
-                        'rgba(75,192,192,0.6)',
-                        'rgba(75,75,192,0.6)',
-                        'rgba(192,75,75,0.6)',
-                        'rgba(75,192,75,0.6)',
-                        'rgba(192,192,75,0.6)',
-                    ],
-                },
-            ],
-        };
+
+        const url = `http://localhost:5000/import_export/athlete/session/${selectedSession.sessionsID}/export_${format}`;
+        axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+        })
+        .then(response => {
+            const blob = new Blob([response.data], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', `session_${new Date(selectedSession.start_time).toLocaleDateString()}.json`);
+            document.body.appendChild(link);
+            link.click();
+        })
+        .catch(error => {
+            console.error(`Error exporting ${format} data:`, error);
+        });
     };
 
     return (
@@ -224,7 +245,7 @@ const HistoryCalendar = ({ token }) => {
                                 <p>{parseFloat(selectedSession.total_distance).toFixed(2)} km</p>
                             </div>
                         </div>
-                        
+
                         {selectedSession.weather && (
                             <div className="weather-container">
                                 <h4>Weather Data</h4>
@@ -241,7 +262,7 @@ const HistoryCalendar = ({ token }) => {
                             <div className="map-container">
                                 <h4>Route Map</h4>
                                 <p>View the route you took during your training session:</p>
-                                <MapContainer center={selectedSession.positions[0]} zoom={13} style={{ height: 400, width: "100%" }}>
+                                <MapContainer center={selectedSession.positions[0]} zoom={13} style={{ height: "80%", width: "100%" }}>
                                     <TileLayer
                                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -263,18 +284,20 @@ const HistoryCalendar = ({ token }) => {
                             <div className="chart-container">
                                 <h4>Hill Data</h4>
                                 <p>Analysis of hills encountered during the session:</p>
-                                <Bar data={getHillData()} options={{ plugins: { legend: { display: true }}}} />
+                                <Doughnut data={getHillData()} options={{plugins: {legend: {display: true}}}}/>
                             </div>
                             <div className="chart-container">
                                 <h4>Hills Share</h4>
                                 <p>Percentage of session spent on hills vs flat terrain:</p>
-                                <Pie data={{
-                                    labels: ['Hills', 'Flat'],
-                                    datasets: [{
-                                        data: [selectedSession.hill_data.hills_share * 100, 100 - selectedSession.hill_data.hills_share * 100],
-                                        backgroundColor: ['rgba(75,192,192,0.6)', 'rgba(192,75,75,0.6)'],
-                                    }]
-                                }} options={{ plugins: { legend: { display: true }}}} />
+                                {selectedSession.hill_data && (
+                                    <Pie data={{
+                                        labels: ['Hills', 'Flat'],
+                                        datasets: [{
+                                            data: [selectedSession.hill_data.hills_share * 100, 100 - selectedSession.hill_data.hills_share * 100],
+                                            backgroundColor: ['rgba(75,192,192,0.6)', 'rgba(192,75,75,0.6)'],
+                                        }]
+                                    }} options={{ plugins: { legend: { display: true }}}} />
+                                )}
                             </div>
                         </div>
                         <div className="chart-container">
@@ -292,42 +315,13 @@ const HistoryCalendar = ({ token }) => {
                             <p>Track your speed throughout the session:</p>
                             <Line data={formatChartData(selectedSession.speeds, 'Speed')} options={{ plugins: { legend: { display: true }}}} />
                         </div>
-                        <div className="chart-container">
-                            <h4>Speed vs Heart Rate</h4>
-                            <p>Compare your speed and heart rate throughout the session:</p>
-                            <Line
-                                data={getSpeedVsHeartRateData()}
-                                options={{
-                                    scales: {
-                                        y1: {
-                                            type: 'linear',
-                                            position: 'left',
-                                            ticks: {
-                                                beginAtZero: true,
-                                            },
-                                            title: {
-                                                display: true,
-                                                text: 'Speed (km/h)'
-                                            }
-                                        },
-                                        y2: {
-                                            type: 'linear',
-                                            position: 'right',
-                                            ticks: {
-                                                beginAtZero: true,
-                                            },
-                                            grid: {
-                                                drawOnChartArea: false,
-                                            },
-                                            title: {
-                                                display: true,
-                                                text: 'Heart Rate (bpm)'
-                                            }
-                                        },
-                                    },
-                                    plugins: { legend: { display: true }},
-                                }}
-                            />
+                        <div className="button-container">
+                            <button className="generate-pdf-button" onClick={() => generatePDFReport(selectedSession, token)}>
+                                Generate PDF Report
+                            </button>
+                            <button className="generate-pdf-button" onClick={() => exportSessionData('json')}>
+                                Export to JSON
+                            </button>
                         </div>
                     </div>
                 )}

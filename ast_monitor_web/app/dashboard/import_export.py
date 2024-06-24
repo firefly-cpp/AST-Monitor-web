@@ -2,9 +2,11 @@ import io
 import json
 import logging
 
-
+import requests
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
+from sport_activities_features import HillIdentification, TopographicFeatures
+
 from ..models.training_sessions_model import TrainingSession
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -16,11 +18,20 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
 
-
+WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
+WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
 
 import_export_bp = Blueprint('import_export_bp', __name__)
 
-
+def get_weather_data(lat, lon, start_time):
+    response = requests.get(WEATHER_API_URL, params={
+        'key': WEATHER_API_KEY,
+        'q': f'{lat},{lon}',
+        'dt': start_time.split('T')[0]
+    })
+    weather_data = response.json()
+    logging.info(f"Weather data response: {weather_data}")
+    return weather_data
 
 
 #Export PDF route
@@ -34,6 +45,38 @@ def export_session_report(session_id):
         if not session:
             logging.warning(f"Session with ID {session_id} not found.")
             return jsonify({"message": "Session not found"}), 404
+
+        # Compute weather data
+        weather_data = {}
+        if session.positions:
+            start_position = json.loads(session.positions)[0]
+            lat, lon = start_position
+            weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
+            if 'forecast' in weather_response and 'forecastday' in weather_response['forecast'] and weather_response['forecast']['forecastday']:
+                day_weather = weather_response['forecast']['forecastday'][0]['day']
+                weather_data = {
+                    "temp_c": day_weather.get('avgtemp_c'),
+                    "condition": day_weather.get('condition', {}).get('text', 'N/A'),
+                    "wind_kph": day_weather.get('maxwind_kph'),
+                    "humidity": day_weather.get('avghumidity')
+                }
+
+        # Compute hill data
+        altitudes = json.loads(session.altitudes)
+        hills = HillIdentification(altitudes, 30)
+        hills.identify_hills()
+        all_hills = hills.return_hills()
+        topographic_features = TopographicFeatures(all_hills)
+        hill_data = {
+            "num_hills": max(0, topographic_features.num_of_hills() or 0),
+            "avg_altitude": max(0, topographic_features.avg_altitude_of_hills([float(a) for a in altitudes]) or 0),
+            "avg_ascent": max(0, topographic_features.avg_ascent_of_hills([float(a) for a in altitudes]) or 0),
+            "distance_hills": max(0, topographic_features.distance_of_hills(json.loads(session.positions)) or 0),
+            "hills_share": max(0, topographic_features.share_of_hills(
+                topographic_features.distance_of_hills(json.loads(session.positions)),
+                float(session.total_distance)
+            ) or 0)
+        }
 
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer, pagesize=letter)
@@ -64,6 +107,22 @@ def export_session_report(session_id):
             pdf.drawString(30, y, detail)
             y -= 15
 
+        # Weather data
+        if weather_data:
+            pdf.drawString(30, y, "Weather Data:")
+            y -= 15
+            for key, value in weather_data.items():
+                pdf.drawString(30, y, f"{key}: {value}")
+                y -= 15
+
+        # Hill data
+        if hill_data:
+            pdf.drawString(30, y, "Hill Data:")
+            y -= 15
+            for key, value in hill_data.items():
+                pdf.drawString(30, y, f"{key}: {value}")
+                y -= 15
+
         # Charts
         def save_chart(data, label):
             plt.figure(figsize=(10, 4))
@@ -89,6 +148,43 @@ def export_session_report(session_id):
                 y = height - 50
             pdf.drawImage(chart_file, 30, y - 150, width=500, height=100)
             y -= 160
+
+        # Doughnut and Pie charts
+        def save_doughnut_chart(data, labels, title):
+            data = [max(0, d or 0) for d in data]  # Ensure all data points are non-negative
+            plt.figure(figsize=(6, 6))
+            plt.pie(data, labels=labels, autopct='%1.1f%%', startangle=140)
+            plt.title(title)
+            plt.gca().add_artist(plt.Circle((0, 0), 0.70, fc='white'))
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+            plt.savefig(temp_file.name)
+            plt.close()
+            return temp_file.name
+
+        hill_data_chart = save_doughnut_chart(
+            data=[
+                hill_data['num_hills'],
+                hill_data['avg_altitude'],
+                hill_data['avg_ascent'],
+                hill_data['distance_hills'],
+                hill_data['hills_share'] * 100
+            ],
+            labels=['Number of Hills', 'Avg Altitude (m)', 'Avg Ascent (m)', 'Distance Hills (km)', 'Hills Share (%)'],
+            title='Hill Data'
+        )
+
+        hills_share_chart = save_doughnut_chart(
+            data=[hill_data['hills_share'] * 100, 100 - hill_data['hills_share'] * 100],
+            labels=['Hills', 'Flat'],
+            title='Hills Share'
+        )
+
+        if y - 300 < 0:
+            pdf.showPage()
+            y = height - 50
+        pdf.drawImage(hill_data_chart, 30, y - 300, width=300, height=300)
+        pdf.drawImage(hills_share_chart, 330, y - 300, width=300, height=300)
+        y -= 320
 
         # Map
         positions = json.loads(session.positions)
@@ -132,7 +228,6 @@ def export_session_report(session_id):
         logging.error(f"Error generating PDF report: {str(e)}")
         return jsonify({"error": "Error generating PDF report"}), 500
 
-
 @import_export_bp.route('/athlete/session/<int:session_id>/export_json', methods=['GET'])
 @jwt_required()
 def export_session_json(session_id):
@@ -140,6 +235,38 @@ def export_session_json(session_id):
         session = TrainingSession.query.get(session_id)
         if not session:
             return jsonify({"message": "Session not found"}), 404
+
+        # Compute weather data
+        weather_data = {}
+        if session.positions:
+            start_position = json.loads(session.positions)[0]
+            lat, lon = start_position
+            weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
+            if 'forecast' in weather_response and 'forecastday' in weather_response['forecast'] and weather_response['forecast']['forecastday']:
+                day_weather = weather_response['forecast']['forecastday'][0]['day']
+                weather_data = {
+                    "temp_c": day_weather.get('avgtemp_c'),
+                    "condition": day_weather.get('condition', {}).get('text', 'N/A'),
+                    "wind_kph": day_weather.get('maxwind_kph'),
+                    "humidity": day_weather.get('avghumidity')
+                }
+
+        # Compute hill data
+        altitudes = json.loads(session.altitudes)
+        hills = HillIdentification(altitudes, 30)
+        hills.identify_hills()
+        all_hills = hills.return_hills()
+        topographic_features = TopographicFeatures(all_hills)
+        hill_data = {
+            "num_hills": topographic_features.num_of_hills(),
+            "avg_altitude": topographic_features.avg_altitude_of_hills([float(a) for a in altitudes]),
+            "avg_ascent": topographic_features.avg_ascent_of_hills([float(a) for a in altitudes]),
+            "distance_hills": topographic_features.distance_of_hills(json.loads(session.positions)),
+            "hills_share": topographic_features.share_of_hills(
+                topographic_features.distance_of_hills(json.loads(session.positions)),
+                float(session.total_distance)
+            )
+        }
 
         session_data = {
             "cyclistID": session.cyclistID,
@@ -160,65 +287,13 @@ def export_session_json(session_id):
             "heartrates": json.loads(session.heartrates),
             "speeds": json.loads(session.speeds),
             "start_time": session.start_time.isoformat(),
-            "positions": json.loads(session.positions) if session.positions else []
+            "positions": json.loads(session.positions) if session.positions else [],
+            "weather": weather_data,
+            "hill_data": hill_data
         }
 
         return jsonify(session_data)
     except Exception as e:
         logging.error(f"Error exporting JSON data: {str(e)}")
         return jsonify({"error": "Error exporting JSON data"}), 500
-
-
-
-
-
-#Importing CSV and JSON
-
-# @import_export_bp.route('/import_session', methods=['POST'])
-# @jwt_required()
-# def import_session():
-#     try:
-#         file = request.files['file']
-#         if not file:
-#             return jsonify({"message": "No file provided"}), 400
-#
-#         file_extension = file.filename.split('.')[-1].lower()
-#         if file_extension not in ['json', 'csv']:
-#             return jsonify({"message": "Unsupported file type"}), 400
-#
-#         if file_extension == 'json':
-#             session_data = json.load(file)
-#         elif file_extension == 'csv':
-#             df = pd.read_csv(file)
-#             session_data = df.to_dict(orient='records')[0]  # Assuming single session data per CSV file
-#
-#         # Assuming session_data is in the correct format
-#         session = TrainingSession(
-#             cyclistID=session_data['cyclistID'],
-#             altitude_avg=session_data['altitude_avg'],
-#             altitude_max=session_data['altitude_max'],
-#             altitude_min=session_data['altitude_min'],
-#             ascent=session_data['ascent'],
-#             calories=session_data['calories'],
-#             descent=session_data['descent'],
-#             distance=session_data['distance'],
-#             duration=pd.Timedelta(seconds=session_data['duration']),
-#             heartrates=json.dumps(session_data['heartrates']),
-#             hr_avg=session_data['hr_avg'],
-#             hr_max=session_data['hr_max'],
-#             hr_min=session_data['hr_min'],
-#             total_distance=session_data['total_distance'],
-#             positions=json.dumps(session_data['positions']),
-#             altitudes=json.dumps(session_data['altitudes']),  # Ensure it is dumped to JSON string
-#             speeds=json.dumps(session_data['speeds']),
-#             start_time=pd.to_datetime(session_data['start_time'])
-#         )
-#
-#         db.session.add(session)
-#         db.session.commit()
-#
-#         return jsonify({"message": "Session imported successfully", "sessionID": session.sessionsID}), 201
-#     except Exception as e:
-#         logging.error(f"Error importing session data: {str(e)}")
-#         return jsonify({"error": "Error importing session data"}), 500
 
