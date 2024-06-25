@@ -227,6 +227,7 @@ h2 {
   font-size: 24px;
   color: #333;
   margin-bottom: 10px;
+  text-align: center; /* Centering the warning headings */
 }
 
 .warning-card {
@@ -265,4 +266,28 @@ h2 {
   margin: 5px 0;
   font-size: 14px;
   color: #555;
+}
+
+.warning-card p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.warning-card p strong {
+  color: #000;
+  font-weight: bold;
+}
+
+.warning-card h4 {
+  font-size: 20px;
+  color: #FF6347;
+  margin-bottom: 10px;
+}
+
+.relevant-rules {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
 }
