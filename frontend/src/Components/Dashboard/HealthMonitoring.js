@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Chart } from 'chart.js';
 import '../../Styles/Dashboard.css';
 
 const HealthMonitoring = ({ token }) => {
@@ -8,10 +7,10 @@ const HealthMonitoring = ({ token }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [warnings, setWarnings] = useState([]);
-  const [sessionData, setSessionData] = useState({
-    hr_max: 220, // Example data
-    hr_avg: 120, // Example data
-    hr_min: 40,  // Example data
+  const [sessionData] = useState({
+    hr_max: 220,
+    hr_avg: 120,
+    hr_min: 40,
     altitude_avg: 200,
     altitude_max: 300,
     altitude_min: 100,
@@ -22,10 +21,6 @@ const HealthMonitoring = ({ token }) => {
     duration: 3600,
     total_distance: 50
   });
-  const chartRef = useRef(null);
-  const chartInstanceRef = useRef(null);
-  const warningChartRef = useRef(null);
-  const warningChartInstanceRef = useRef(null);
 
   const handleRunNiaARM = async () => {
     setLoading(true);
@@ -74,133 +69,125 @@ const HealthMonitoring = ({ token }) => {
     fetchSavedRules();
   }, [token]);
 
-  useEffect(() => {
-    if (rules && rules.length > 0 && chartRef.current) {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
+  const formatWarningMessage = (warning, pattern) => {
+    const lhsConditions = pattern.lhs.map(condition => {
+      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 3);
+      return `${name} is between <strong>${range}</strong>`;
+    }).join(' and ');
+
+    const rhsConditions = pattern.rhs.map(condition => {
+      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 3);
+      return `${name} is between <strong>${range}</strong>`;
+    }).join(' and ');
+
+    let heartRateWarning = '';
+    let warningTitle = 'Heart Rate Warning';
+
+    if (warning.includes('hr_max')) {
+      const hrMaxValue = parseFloat(warning.match(/hr_max\(\[([\d.]+), ([\d.]+)\]\)/)[2]);
+      if (hrMaxValue > 200) {
+        heartRateWarning = ' <strong>Your maximum heart rate is too high.</strong>';
+        warningTitle = 'High Heart Rate Warning';
       }
-      
-      const ctx = chartRef.current.getContext('2d');
-      chartInstanceRef.current = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: rules.map((rule, index) => `Rule ${index + 1}`),
-          datasets: [
-            {
-              label: 'Support',
-              data: rules.map(rule => rule.support),
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            },
-            {
-              label: 'Confidence',
-              data: rules.map(rule => rule.confidence),
-              backgroundColor: 'rgba(153, 102, 255, 0.6)',
-            }
-          ]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
     }
-  }, [rules]);
-
-  useEffect(() => {
-    if (warnings && warnings.length > 0 && warningChartRef.current) {
-      if (warningChartInstanceRef.current) {
-        warningChartInstanceRef.current.destroy();
+    if (warning.includes('hr_min')) {
+      const hrMinValue = parseFloat(warning.match(/hr_min\(\[([\d.]+), ([\d.]+)\]\)/)[1]);
+      if (hrMinValue < 50) {
+        heartRateWarning = ' <strong>Your minimum heart rate is too low.</strong>';
+        warningTitle = 'Low Heart Rate Warning';
       }
-
-      const ctx = warningChartRef.current.getContext('2d');
-      warningChartInstanceRef.current = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: warnings.map((_, index) => `Warning ${index + 1}`),
-          datasets: [
-            {
-              label: 'Warnings',
-              data: warnings.map(() => 1),
-              backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            }
-          ]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
     }
-  }, [warnings]);
 
-  const generateDescription = (rule) => {
-    const lhsDescriptions = rule.lhs.map(condition => {
-      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 2);
-      return `${name} is between ${range}`;
-    }).join(' AND ');
+    return { 
+      message: `<strong>Careful!</strong> When your ${lhsConditions}, <strong>then</strong> ${rhsConditions}. This could indicate potential health risks based on your recent session data. ${heartRateWarning} Please monitor your health metrics closely.`,
+      title: warningTitle
+    };
+  };
 
-    const rhsDescriptions = rule.rhs.map(condition => {
-      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 2);
-      return `${name} is between ${range}`;
-    }).join(' AND ');
+  const getRelevantRules = (warning) => {
+    if (!rules) return [];
 
-    return `If ${lhsDescriptions}, then ${rhsDescriptions}.`;
+    const warningConditions = warning.match(/(\w+)\(\[([\d.]+), ([\d.]+)\]\)|(\w+)\(([\d-: ]+)\)/g);
+    if (!warningConditions) return [];
+
+    const relevantRules = rules.filter(rule => {
+      const ruleConditions = [...rule.lhs, ...rule.rhs];
+      return ruleConditions.some(condition => warningConditions.includes(condition));
+    });
+
+    return relevantRules;
   };
 
   const renderRule = (rule, index) => (
-    <div key={index} className="rule">
-      <h4>Rule {index + 1}</h4>
-      <p><strong>IF:</strong> {rule.lhs.join(' AND ')}</p>
-      <p><strong>THEN:</strong> {rule.rhs.join(' AND ')}</p>
-      <p><strong>Support:</strong> {rule.support}</p>
-      <p><strong>Confidence:</strong> {rule.confidence}</p>
-      <p><strong>Description:</strong> {generateDescription(rule)}</p>
+    <div key={index} className="rule-card">
+      <h4>Based on Injury Pattern</h4>
+      <p><strong>WHEN:</strong> {rule.lhs.join(' and ')}</p>
+      <p><strong>THEN:</strong> {rule.rhs.join(' and ')}</p>
+      <p><strong>Confidence: </strong>{rule.confidence.toFixed(2)} - Indicates how often the rule is correct.</p>
     </div>
   );
 
-  const renderWarning = (warning, index) => (
-    <div key={index} className="warning">
-      <h4>Warning {index + 1}</h4>
-      <p>{warning}</p>
-    </div>
-  );
+  const renderWarning = (warning, index) => {
+    const relevantRules = getRelevantRules(warning);
+    const { message, title } = formatWarningMessage(warning, relevantRules[0]);
+    return (
+      <div key={index} className="warning-card">
+        <h4>{title}</h4>
+        <p dangerouslySetInnerHTML={{ __html: message }} />
+        <div className="relevant-rules">
+          {relevantRules.map((rule, ruleIndex) => renderRule(rule, ruleIndex))}
+        </div>
+      </div>
+    );
+  };
+
+  const groupedWarnings = warnings.reduce((acc, warning) => {
+    const relevantRules = getRelevantRules(warning);
+    const { title, message } = formatWarningMessage(warning, relevantRules[0]);
+    if (!acc[title]) {
+      acc[title] = [];
+    }
+    acc[title].push({ message, warning });
+    return acc;
+  }, {});
+
+  // Filter out only the High Heart Rate and Low Heart Rate warnings
+  const filteredWarnings = Object.keys(groupedWarnings)
+    .filter(title => title === 'High Heart Rate Warning' || title === 'Low Heart Rate Warning')
+    .reduce((acc, title) => {
+      acc[title] = groupedWarnings[title];
+      return acc;
+    }, {});
 
   return (
     <div className="health-monitoring">
       <h2>Health Monitoring</h2>
       <div className="button-group">
-        <button onClick={handleRunNiaARM} disabled={loading}>
-          {loading ? 'Running NiaARM...' : 'Run NiaARM'}
-        </button>
-        <button onClick={handleCheckSession} disabled={loading}>
-          {loading ? 'Checking Session...' : 'Check Session'}
-        </button>
+        <div className="button-section">
+          <p>Run the program to find health patterns from your previous training sessions using machine learning.</p>
+          <button onClick={handleRunNiaARM} disabled={loading}>
+            {loading ? 'Running NiaARM...' : 'Find Patterns'}
+          </button>
+        </div>
+        <hr className="button-divider" />
+        <div className="button-section">
+          <p>Check the last session for any health risks identified through data analysis.</p>
+          <button onClick={handleCheckSession} disabled={loading}>
+            {loading ? 'Checking Session...' : 'Check Session'}
+          </button>
+        </div>
       </div>
       {error && <p className="error">{error}</p>}
-      {rules && (
-        <div>
-          <h3>Association Rules</h3>
-          {rules.length > 0 ? (
-            <>
-              {rules.map((rule, index) => renderRule(rule, index))}
-              <canvas ref={chartRef} />
-            </>
-          ) : (
-            <p>No rules generated.</p>
-          )}
-        </div>
-      )}
-      {warnings.length > 0 && (
-        <div className="warnings">
-          <h3>Warnings</h3>
-          {warnings.map((warning, index) => renderWarning(warning, index))}
-          <canvas ref={warningChartRef} />
+      {Object.keys(filteredWarnings).length > 0 && (
+        <div className="warnings-container">
+          <div className="warning-groups">
+            {Object.keys(filteredWarnings).map((title, index) => (
+              <div key={index} className="warning-group">
+                <h3>{title}</h3>
+                {filteredWarnings[title].map((item, subIndex) => renderWarning(item.warning, subIndex))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
