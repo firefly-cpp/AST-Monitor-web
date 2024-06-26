@@ -3,22 +3,6 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS public.api_integrations
-(
-    "integrationsID" serial NOT NULL,
-    "apisID" integer NOT NULL,
-    "usersID" integer NOT NULL,
-    CONSTRAINT api_integrations_pkey PRIMARY KEY ("integrationsID")
-);
-
-CREATE TABLE IF NOT EXISTS public.apis
-(
-    "apisID" serial NOT NULL,
-    provider character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    usage_info text COLLATE pg_catalog."default",
-    CONSTRAINT apis_pkey PRIMARY KEY ("apisID")
-);
-
 CREATE TABLE IF NOT EXISTS public.coaches
 (
     "coachID" serial NOT NULL,
@@ -52,31 +36,6 @@ CREATE TABLE IF NOT EXISTS public.cyclists
     CONSTRAINT cyclists_pkey PRIMARY KEY ("cyclistID"),
     CONSTRAINT cyclists_email_unique UNIQUE (email),
     CONSTRAINT cyclists_username_key UNIQUE (username)
-);
-
-CREATE TABLE IF NOT EXISTS public.equipment
-(
-    "equipmentID" serial NOT NULL,
-    type character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    model character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    compatible_with character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT equipment_pkey PRIMARY KEY ("equipmentID")
-);
-
-CREATE TABLE IF NOT EXISTS public.memberships
-(
-    "membershipsID" serial NOT NULL,
-    "usersID" integer NOT NULL,
-    "organizationsID" integer NOT NULL,
-    CONSTRAINT memberships_pkey PRIMARY KEY ("membershipsID")
-);
-
-CREATE TABLE IF NOT EXISTS public.organizations
-(
-    "organizationsID" serial NOT NULL,
-    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    type character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT organizations_pkey PRIMARY KEY ("organizationsID")
 );
 
 CREATE TABLE IF NOT EXISTS public.training_plan_templates
@@ -128,22 +87,6 @@ CREATE TABLE IF NOT EXISTS public.training_sessions
     CONSTRAINT training_sessions_pkey PRIMARY KEY ("sessionsID")
 );
 
-CREATE TABLE IF NOT EXISTS public.user_equipment
-(
-    "user_equipmentID" serial NOT NULL,
-    "cyclistID" integer NOT NULL,
-    "equipmentID" integer NOT NULL,
-    CONSTRAINT user_equipment_pkey PRIMARY KEY ("user_equipmentID")
-);
-
-ALTER TABLE IF EXISTS public.api_integrations
-    ADD CONSTRAINT "api_integrations_apisID_fkey" FOREIGN KEY ("apisID")
-    REFERENCES public.apis ("apisID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
 ALTER TABLE IF EXISTS public.cyclist_training_plans
     ADD CONSTRAINT cyclist_training_plans_cyclistid_fkey FOREIGN KEY ("cyclistID")
     REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
@@ -165,14 +108,6 @@ ALTER TABLE IF EXISTS public.cyclists
     ON DELETE NO ACTION;
 
 
-ALTER TABLE IF EXISTS public.memberships
-    ADD CONSTRAINT "memberships_organizationsID_fkey" FOREIGN KEY ("organizationsID")
-    REFERENCES public.organizations ("organizationsID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
 ALTER TABLE IF EXISTS public.training_plan_templates
     ADD CONSTRAINT training_plan_templates_planid_fkey FOREIGN KEY ("planID")
     REFERENCES public.training_plans ("plansID") MATCH SIMPLE
@@ -192,20 +127,5 @@ ALTER TABLE IF EXISTS public.training_sessions
     REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
-
-
-ALTER TABLE IF EXISTS public.user_equipment
-    ADD CONSTRAINT "user_equipment_cyclistID_fkey" FOREIGN KEY ("cyclistID")
-    REFERENCES public.cyclists ("cyclistID") MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
-
-
-ALTER TABLE IF EXISTS public.user_equipment
-    ADD CONSTRAINT "user_equipment_equipmentID_fkey" FOREIGN KEY ("equipmentID")
-    REFERENCES public.equipment ("equipmentID") MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
 
 END;

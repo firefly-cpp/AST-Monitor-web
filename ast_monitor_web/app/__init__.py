@@ -5,7 +5,6 @@ from flask_mail import Mail
 from .auth import auth_bp
 from .dashboard.coach import coach_bp
 from .dashboard.cyclist import cyclist_bp
-from .dashboard.data_fetching import data_bp
 from .dashboard.import_export import import_export_bp
 from .models.database import db
 from config import Config
@@ -27,7 +26,6 @@ def create_app(config_class=Config):
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(data_bp, url_prefix='/data_fetching')
     app.register_blueprint(coach_bp, url_prefix='/coach')
     app.register_blueprint(cyclist_bp, url_prefix='/cyclist')
     app.register_blueprint(import_export_bp, url_prefix='/import_export')
