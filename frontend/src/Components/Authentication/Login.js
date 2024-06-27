@@ -6,10 +6,12 @@ import '../../Styles/Auth.css';
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError('');
     try {
       const response = await axios.post('http://localhost:5000/auth/login', {
         username,
@@ -20,7 +22,11 @@ const Login = ({ onLogin }) => {
       onLogin(response.data.access_token, response.data.role);
       navigate('/dashboard');
     } catch (error) {
-      alert('Login failed: ' + error.response.data.message);
+      if (error.response) {
+        setError(error.response.data.message);
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
 
@@ -28,6 +34,7 @@ const Login = ({ onLogin }) => {
     <div className="auth-container">
       <form onSubmit={handleSubmit} className="auth-form">
         <h2>Login</h2>
+        {error && <p className="error">{error}</p>}
         <label>Username:</label>
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
 

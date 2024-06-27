@@ -43,7 +43,7 @@ const HealthMonitoring = ({ token }) => {
     setError('');
     try {
       const response = await axios.post('http://localhost:5000/cyclist/check_session', sessionData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       setWarnings(response.data.warnings);
     } catch (error) {
@@ -70,35 +70,49 @@ const HealthMonitoring = ({ token }) => {
   }, [token]);
 
   const formatWarningMessage = (warning, pattern) => {
-    const lhsConditions = pattern.lhs.map(condition => {
-      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 3);
-      return `${name} is between <strong>${range}</strong>`;
+    const lhsConditions = (pattern.lhs || []).map(condition => {
+      const match = condition.match(/(.+?)\((.+)\)/);
+      if (match) {
+        const [name, range] = match.slice(1, 3);
+        return `${name} is between <strong>${range}</strong>`;
+      }
+      return condition;
     }).join(' and ');
 
-    const rhsConditions = pattern.rhs.map(condition => {
-      const [name, range] = condition.match(/(.+?)\((.+)\)/).slice(1, 3);
-      return `${name} is between <strong>${range}</strong>`;
+    const rhsConditions = (pattern.rhs || []).map(condition => {
+      const match = condition.match(/(.+?)\((.+)\)/);
+      if (match) {
+        const [name, range] = match.slice(1, 3);
+        return `${name} is between <strong>${range}</strong>`;
+      }
+      return condition;
     }).join(' and ');
 
     let heartRateWarning = '';
     let warningTitle = 'Heart Rate Warning';
 
     if (warning.includes('hr_max')) {
-      const hrMaxValue = parseFloat(warning.match(/hr_max\(\[([\d.]+), ([\d.]+)\]\)/)[2]);
-      if (hrMaxValue > 200) {
-        heartRateWarning = ' <strong>Your maximum heart rate is too high.</strong>';
-        warningTitle = 'High Heart Rate Warning';
+      const hrMaxMatch = warning.match(/hr_max\(\[([\d.]+), ([\d.]+)\]\)/);
+      if (hrMaxMatch) {
+        const hrMaxValue = parseFloat(hrMaxMatch[2]);
+        if (hrMaxValue > 200) {
+          heartRateWarning = ' <strong>Your maximum heart rate is too high.</strong>';
+          warningTitle = 'High Heart Rate Warning';
+        }
       }
     }
     if (warning.includes('hr_min')) {
-      const hrMinValue = parseFloat(warning.match(/hr_min\(\[([\d.]+), ([\d.]+)\]\)/)[1]);
-      if (hrMinValue < 50) {
-        heartRateWarning = ' <strong>Your minimum heart rate is too low.</strong>';
-        warningTitle = 'Low Heart Rate Warning';
+      const hrMinMatch = warning.match(/hr_min\(\[([\d.]+), ([\d.]+)\]\)/);
+      if (hrMinMatch) {
+        const hrMinValue = parseFloat(hrMinMatch[1]);
+        if (hrMinValue < 50) {
+          heartRateWarning = ' <strong>Your minimum heart rate is too low.</strong>';
+          warningTitle = 'Low Heart Rate Warning';
+        }
       }
     }
 
-    return { 
+    return {
       message: `<strong>Careful!</strong> When your ${lhsConditions}, <strong>then</strong> ${rhsConditions}. This could indicate potential health risks based on your recent session data. ${heartRateWarning} Please monitor your health metrics closely.`,
       title: warningTitle
     };
@@ -111,7 +125,7 @@ const HealthMonitoring = ({ token }) => {
     if (!warningConditions) return [];
 
     const relevantRules = rules.filter(rule => {
-      const ruleConditions = [...rule.lhs, ...rule.rhs];
+      const ruleConditions = [...(rule.lhs || []), ...(rule.rhs || [])];
       return ruleConditions.some(condition => warningConditions.includes(condition));
     });
 
@@ -121,14 +135,16 @@ const HealthMonitoring = ({ token }) => {
   const renderRule = (rule, index) => (
     <div key={index} className="rule-card">
       <h4>Based on Injury Pattern</h4>
-      <p><strong>WHEN:</strong> {rule.lhs.join(' and ')}</p>
-      <p><strong>THEN:</strong> {rule.rhs.join(' and ')}</p>
+      <p><strong>WHEN:</strong> {(rule.lhs || []).join(' and ')}</p>
+      <p><strong>THEN:</strong> {(rule.rhs || []).join(' and ')}</p>
       <p><strong>Confidence: </strong>{rule.confidence.toFixed(2)} - Indicates how often the rule is correct.</p>
     </div>
   );
 
   const renderWarning = (warning, index) => {
     const relevantRules = getRelevantRules(warning);
+    if (relevantRules.length === 0) return null;  // No relevant rules found, skip rendering
+
     const { message, title } = formatWarningMessage(warning, relevantRules[0]);
     return (
       <div key={index} className="warning-card">
@@ -143,6 +159,8 @@ const HealthMonitoring = ({ token }) => {
 
   const groupedWarnings = warnings.reduce((acc, warning) => {
     const relevantRules = getRelevantRules(warning);
+    if (relevantRules.length === 0) return acc;  // No relevant rules found, skip grouping
+
     const { title, message } = formatWarningMessage(warning, relevantRules[0]);
     if (!acc[title]) {
       acc[title] = [];

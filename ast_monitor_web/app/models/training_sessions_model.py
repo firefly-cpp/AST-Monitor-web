@@ -1,7 +1,12 @@
-from .database import db
+"""
+Models for training sessions in the AST Monitor web application.
+"""
+
 from sqlalchemy import Column, Integer, Numeric, Text, Interval, String, DateTime
+from .database import db
 
 class TrainingSession(db.Model):
+    """Model for a training session."""
     __tablename__ = 'training_sessions'
 
     sessionsID = Column(Integer, primary_key=True)
@@ -27,9 +32,11 @@ class TrainingSession(db.Model):
     timestamps = Column(Text)
     total_distance = Column(Numeric)
 
-    def __init__(self, cyclistID, altitude_avg=None, altitude_max=None, altitude_min=None, altitudes=None, ascent=None, calories=None,
-                 descent=None, distance=None, distances=None, duration=None, heartrates=None, hr_avg=None, hr_max=None, hr_min=None,
-                 positions=None, speeds=None, start_time=None, steps=None, timestamps=None, total_distance=None):
+    def __init__(self, cyclistID, altitude_avg=None, altitude_max=None, altitude_min=None, altitudes=None, ascent=None,
+                 calories=None, descent=None, distance=None, distances=None, duration=None, heartrates=None, hr_avg=None,
+                 hr_max=None, hr_min=None, positions=None, speeds=None, start_time=None, steps=None, timestamps=None,
+                 total_distance=None):
+        """Initialize a TrainingSession instance."""
         self.cyclistID = cyclistID
         self.altitude_avg = altitude_avg
         self.altitude_max = altitude_max
@@ -53,6 +60,7 @@ class TrainingSession(db.Model):
         self.total_distance = total_distance
 
     def to_dict(self):
+        """Convert the TrainingSession instance to a dictionary."""
         return {
             'sessionsID': self.sessionsID,
             'cyclistID': self.cyclistID,

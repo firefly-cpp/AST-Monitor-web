@@ -16,7 +16,7 @@ class Config:
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
     MAIL_DEBUG = True
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'ast_monitor_web', 'app', 'static')
 
 class TestConfig(Config):
     TESTING = True

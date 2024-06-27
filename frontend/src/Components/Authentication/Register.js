@@ -14,6 +14,7 @@ const Register = ({ onRegister }) => {
   const [weight, setWeight] = useState('');
   const [coachID, setCoachID] = useState('');
   const [coaches, setCoaches] = useState([]);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +32,7 @@ const Register = ({ onRegister }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(''); // Clear previous error
     const userData = {
       username,
       email,
@@ -51,14 +53,18 @@ const Register = ({ onRegister }) => {
       onRegister(data.access_token, role);
       navigate('/login'); // Redirect to the login page after successful registration
     } catch (error) {
-      console.error('Registration failed:', error.response);
-      alert('Registration failed: ' + error.response.data.msg);
+      if (error.response) {
+        setError(error.response.data.message);
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className="auth-form">
       <h2>Register as {role}</h2>
+      {error && <p className="error">{error}</p>}
       <label>Username:</label>
       <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
       <label>Email:</label>

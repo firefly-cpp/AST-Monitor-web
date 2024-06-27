@@ -1,7 +1,12 @@
-from .database import db
+"""
+Models for user management in the AST Monitor web application.
+"""
+
 from sqlalchemy import Column, Integer, String, Date
+from .database import db
 
 class Coach(db.Model):
+    """Model for a coach."""
     __tablename__ = 'coaches'
 
     coachID = Column(Integer, primary_key=True)
@@ -11,12 +16,14 @@ class Coach(db.Model):
     profile_picture = Column(String(255), nullable=True)
 
     def __init__(self, username, password, email, profile_picture=None):
+        """Initialize a Coach instance."""
         self.username = username
         self.password = password
         self.email = email
         self.profile_picture = profile_picture
 
     def to_dict(self):
+        """Convert the Coach instance to a dictionary."""
         return {
             'coachID': self.coachID,
             'username': self.username,
@@ -25,6 +32,7 @@ class Coach(db.Model):
         }
 
 class Cyclist(db.Model):
+    """Model for a cyclist."""
     __tablename__ = 'cyclists'
 
     cyclistID = Column(Integer, primary_key=True)
@@ -40,6 +48,7 @@ class Cyclist(db.Model):
     coach = db.relationship('Coach', backref=db.backref('cyclists', lazy=True))
 
     def __init__(self, coachID, username, password, email, date_of_birth=None, height_cm=None, weight_kg=None, profile_picture=None):
+        """Initialize a Cyclist instance."""
         self.coachID = coachID
         self.username = username
         self.password = password
@@ -50,6 +59,7 @@ class Cyclist(db.Model):
         self.profile_picture = profile_picture
 
     def to_dict(self):
+        """Convert the Cyclist instance to a dictionary."""
         return {
             'cyclistID': self.cyclistID,
             'coachID': self.coachID,

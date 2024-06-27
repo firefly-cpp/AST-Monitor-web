@@ -1,49 +1,37 @@
+"""
+Module for exporting session data in various formats for the AST Monitor web application.
+"""
+
 import io
 import json
 import logging
-
+import tempfile
 import requests
-from flask import jsonify, Blueprint
-from flask_jwt_extended import jwt_required
-from sport_activities_features import HillIdentification, TopographicFeatures
-
-from ..models.training_sessions_model import TrainingSession
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from flask import send_file
 import matplotlib.pyplot as plt
 import folium
-import tempfile
+from flask import jsonify, Blueprint, send_file, current_app
+from flask_jwt_extended import jwt_required
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
 
-WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
-WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
+from ..models.training_sessions_model import TrainingSession
+from ..utils import get_weather_data, compute_hill_data
 
 import_export_bp = Blueprint('import_export_bp', __name__)
 
-def get_weather_data(lat, lon, start_time):
-    response = requests.get(WEATHER_API_URL, params={
-        'key': WEATHER_API_KEY,
-        'q': f'{lat},{lon}',
-        'dt': start_time.split('T')[0]
-    })
-    weather_data = response.json()
-    logging.info(f"Weather data response: {weather_data}")
-    return weather_data
-
-
-#Export PDF route
 
 @import_export_bp.route('/athlete/session/<int:session_id>/export_pdf', methods=['GET'])
 @jwt_required()
 def export_session_report(session_id):
+    """Export session report as a PDF."""
     try:
-        logging.debug(f"Attempting to fetch session ID: {session_id}")
+        logging.debug("Attempting to fetch session ID: %d", session_id)
         session = TrainingSession.query.get(session_id)
         if not session:
-            logging.warning(f"Session with ID {session_id} not found.")
+            logging.warning("Session with ID %d not found.", session_id)
             return jsonify({"message": "Session not found"}), 404
 
         # Compute weather data
@@ -52,7 +40,8 @@ def export_session_report(session_id):
             start_position = json.loads(session.positions)[0]
             lat, lon = start_position
             weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-            if 'forecast' in weather_response and 'forecastday' in weather_response['forecast'] and weather_response['forecast']['forecastday']:
+            if ('forecast' in weather_response and 'forecastday' in weather_response['forecast']
+                    and weather_response['forecast']['forecastday']):
                 day_weather = weather_response['forecast']['forecastday'][0]['day']
                 weather_data = {
                     "temp_c": day_weather.get('avgtemp_c'),
@@ -61,22 +50,7 @@ def export_session_report(session_id):
                     "humidity": day_weather.get('avghumidity')
                 }
 
-        # Compute hill data
-        altitudes = json.loads(session.altitudes)
-        hills = HillIdentification(altitudes, 30)
-        hills.identify_hills()
-        all_hills = hills.return_hills()
-        topographic_features = TopographicFeatures(all_hills)
-        hill_data = {
-            "num_hills": max(0, topographic_features.num_of_hills() or 0),
-            "avg_altitude": max(0, topographic_features.avg_altitude_of_hills([float(a) for a in altitudes]) or 0),
-            "avg_ascent": max(0, topographic_features.avg_ascent_of_hills([float(a) for a in altitudes]) or 0),
-            "distance_hills": max(0, topographic_features.distance_of_hills(json.loads(session.positions)) or 0),
-            "hills_share": max(0, topographic_features.share_of_hills(
-                topographic_features.distance_of_hills(json.loads(session.positions)),
-                float(session.total_distance)
-            ) or 0)
-        }
+        hill_data = compute_hill_data(session)
 
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer, pagesize=letter)
@@ -204,13 +178,12 @@ def export_session_report(session_id):
             options.add_argument("--window-size=800,600")
             driver = webdriver.Chrome(options=options)
 
-            temp_map_html = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
-            temp_map_html.write(map_html.encode('utf-8'))
-            temp_map_html.close()
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as temp_map_html:
+                temp_map_html.write(map_html.encode('utf-8'))
 
             driver.get(f'file://{temp_map_html.name}')
-            temp_map_png = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
-            driver.save_screenshot(temp_map_png.name)
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_map_png:
+                driver.save_screenshot(temp_map_png.name)
             driver.quit()
 
             map_height = 200
@@ -225,12 +198,14 @@ def export_session_report(session_id):
         buffer.seek(0)
         return send_file(buffer, as_attachment=True, download_name=f"session_report_{session.start_time.strftime('%Y-%m-%d')}.pdf", mimetype='application/pdf')
     except Exception as e:
-        logging.error(f"Error generating PDF report: {str(e)}")
+        logging.error("Error generating PDF report: %s", str(e))
         return jsonify({"error": "Error generating PDF report"}), 500
+
 
 @import_export_bp.route('/athlete/session/<int:session_id>/export_json', methods=['GET'])
 @jwt_required()
 def export_session_json(session_id):
+    """Export session data as JSON."""
     try:
         session = TrainingSession.query.get(session_id)
         if not session:
@@ -242,7 +217,8 @@ def export_session_json(session_id):
             start_position = json.loads(session.positions)[0]
             lat, lon = start_position
             weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-            if 'forecast' in weather_response and 'forecastday' in weather_response['forecast'] and weather_response['forecast']['forecastday']:
+            if ('forecast' in weather_response and 'forecastday' in weather_response['forecast']
+                    and weather_response['forecast']['forecastday']):
                 day_weather = weather_response['forecast']['forecastday'][0]['day']
                 weather_data = {
                     "temp_c": day_weather.get('avgtemp_c'),
@@ -251,22 +227,7 @@ def export_session_json(session_id):
                     "humidity": day_weather.get('avghumidity')
                 }
 
-        # Compute hill data
-        altitudes = json.loads(session.altitudes)
-        hills = HillIdentification(altitudes, 30)
-        hills.identify_hills()
-        all_hills = hills.return_hills()
-        topographic_features = TopographicFeatures(all_hills)
-        hill_data = {
-            "num_hills": topographic_features.num_of_hills(),
-            "avg_altitude": topographic_features.avg_altitude_of_hills([float(a) for a in altitudes]),
-            "avg_ascent": topographic_features.avg_ascent_of_hills([float(a) for a in altitudes]),
-            "distance_hills": topographic_features.distance_of_hills(json.loads(session.positions)),
-            "hills_share": topographic_features.share_of_hills(
-                topographic_features.distance_of_hills(json.loads(session.positions)),
-                float(session.total_distance)
-            )
-        }
+        hill_data = compute_hill_data(session)
 
         session_data = {
             "cyclistID": session.cyclistID,
@@ -294,6 +255,5 @@ def export_session_json(session_id):
 
         return jsonify(session_data)
     except Exception as e:
-        logging.error(f"Error exporting JSON data: {str(e)}")
+        logging.error("Error exporting JSON data: %s", str(e))
         return jsonify({"error": "Error exporting JSON data"}), 500
-

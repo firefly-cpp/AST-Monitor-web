@@ -1,3 +1,7 @@
+"""
+Authentication and user management views for the AST Monitor web application.
+"""
+
 import os
 import uuid
 
@@ -7,21 +11,29 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Message
 from werkzeug.utils import secure_filename
-
-from ..models.usermodel import db, Coach, Cyclist
-from ..__init__ import mail
 from sqlalchemy.exc import IntegrityError
 
+from ..models.usermodel import db, Coach, Cyclist
+from ..extensions import mail
+
+# Initialize the Blueprint here
 auth_bp = Blueprint('auth_bp', __name__)
 
-
-# Coach registration endpoint
 @auth_bp.route('/register_coach', methods=['POST'])
 def register_coach():
+    """Register a new coach"""
     data = request.get_json()
     username = data['username']
     email = data['email']
     password = generate_password_hash(data['password'])
+
+    existing_user = Coach.query.filter((Coach.username == username) | (Coach.email == email)).first()
+    if existing_user:
+        if existing_user.username == username:
+            return jsonify({'message': 'Username already exists'}), 409
+        if existing_user.email == email:
+            return jsonify({'message': 'Email already exists'}), 409
+
     new_coach = Coach(username=username, email=email, password=password)
     try:
         db.session.add(new_coach)
@@ -29,24 +41,32 @@ def register_coach():
         return jsonify({'message': 'Coach registered successfully'}), 201
     except IntegrityError:
         db.session.rollback()
-        return jsonify({'message': 'Registration failed, username or email already exists'}), 409
+        return jsonify({'message': 'Registration failed, please try again'}), 500
 
 
 @auth_bp.route('/register_cyclist', methods=['POST'])
 def register_cyclist():
+    """Register a new cyclist"""
     data = request.get_json()
     username = data['username']
     email = data['email']
     password = generate_password_hash(data['password'])
-    coachID = data.get('coachID')  # Use .get to avoid KeyError
+    coach_id = data.get('coachID')
     date_of_birth = data['date_of_birth']
     height_cm = data['height_cm']
     weight_kg = data['weight_kg']
 
-    if not coachID:  # Check if coachID is provided
+    existing_user = Cyclist.query.filter((Cyclist.username == username) | (Cyclist.email == email)).first()
+    if existing_user:
+        if existing_user.username == username:
+            return jsonify({'message': 'Username already exists'}), 409
+        if existing_user.email == email:
+            return jsonify({'message': 'Email already exists'}), 409
+
+    if not coach_id:
         return jsonify({'message': 'Coach ID must be provided'}), 400
 
-    new_cyclist = Cyclist(coachID=coachID, username=username, email=email, password=password,
+    new_cyclist = Cyclist(coachID=coach_id, username=username, email=email, password=password,
                           date_of_birth=date_of_birth, height_cm=height_cm, weight_kg=weight_kg)
     try:
         db.session.add(new_cyclist)
@@ -54,29 +74,32 @@ def register_cyclist():
         return jsonify({'message': 'Cyclist registered successfully'}), 201
     except IntegrityError:
         db.session.rollback()
-        return jsonify({'message': 'Registration failed, username or email already exists'}), 409
+        return jsonify({'message': 'Registration failed, please try again'}), 500
 
 
-# Update your login function to handle both coaches and cyclists
 @auth_bp.route('/login', methods=['POST'])
 def login():
+    """Log in a user"""
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+
     user = Coach.query.filter_by(username=username).first() or Cyclist.query.filter_by(username=username).first()
-    if user and check_password_hash(user.password, password):
-        user_id = user.coachID if isinstance(user, Coach) else user.cyclistID
-        role = 'coach' if isinstance(user, Coach) else 'cyclist'
-        # Include both user ID and role in the JWT identity
-        identity = {'user_id': user_id, 'role': role}
-        access_token = create_access_token(identity=identity)
-        return jsonify(access_token=access_token, role=role), 200
-    else:
-        return jsonify({"msg": "Invalid username or password"}), 401
+
+    if user:
+        if check_password_hash(user.password, password):
+            user_id = user.coachID if isinstance(user, Coach) else user.cyclistID
+            role = 'coach' if isinstance(user, Coach) else 'cyclist'
+            identity = {'user_id': user_id, 'role': role}
+            access_token = create_access_token(identity=identity)
+            return jsonify(access_token=access_token, role=role), 200
+        return jsonify({"message": "Incorrect password"}), 401
+    return jsonify({"message": "Account not found"}), 404
 
 
 @auth_bp.route('/recover', methods=['POST'])
 def recover():
+    """Recover a user's password"""
     data = request.get_json()
     email = data.get('email')
     user = Coach.query.filter_by(email=email).first() or Cyclist.query.filter_by(email=email).first()
@@ -94,6 +117,7 @@ def recover():
 
 @auth_bp.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_with_token(token):
+    """Reset a user's password with token"""
     serializer = URLSafeTimedSerializer(current_app.config['JWT_SECRET_KEY'])
     try:
         email = serializer.loads(token, salt='email-recover', max_age=3600)
@@ -114,35 +138,30 @@ def reset_with_token(token):
 @auth_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
+    """Get a user's profile"""
     identity = get_jwt_identity()
     user_id = identity['user_id']
     role = identity['role']
 
-    if role == 'coach':
-        user = Coach.query.filter_by(coachID=user_id).first()
-    else:
-        user = Cyclist.query.filter_by(cyclistID=user_id).first()
+    user = Coach.query.filter_by(coachID=user_id).first() if role == 'coach' else Cyclist.query.filter_by(cyclistID=user_id).first()
 
     if not user:
         return jsonify({"message": "User not found"}), 404
 
     user_data = user.to_dict()
-    user_data['role'] = role  # Add role to the user data
+    user_data['role'] = role
     return jsonify(user_data), 200
 
 
 @auth_bp.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    identity = get_jwt_identity()  # Extract the identity from the JWT
+    """Update a user's profile"""
+    identity = get_jwt_identity()
     user_id = identity['user_id']
     role = identity['role']
 
-    # Find the user by role and user ID
-    if role == 'coach':
-        user = Coach.query.filter_by(coachID=user_id).first()
-    else:
-        user = Cyclist.query.filter_by(cyclistID=user_id).first()
+    user = Coach.query.filter_by(coachID=user_id).first() if role == 'coach' else Cyclist.query.filter_by(cyclistID=user_id).first()
 
     if not user:
         return jsonify({"message": "User not found"}), 404
@@ -150,7 +169,6 @@ def update_profile():
     data = request.get_json()
     user.username = data.get('username', user.username)
 
-    # If the user is a Cyclist, update additional fields
     if role == 'cyclist':
         if 'height_cm' in data and data['height_cm'] != '':
             user.height_cm = data['height_cm']
@@ -161,11 +179,9 @@ def update_profile():
     return jsonify({"message": "Profile updated successfully"}), 200
 
 
-
-
-# Fetch all coaches:
 @auth_bp.route('/coaches', methods=['GET'])
 def get_all_coaches():
+    """Fetch all coaches"""
     try:
         coaches = Coach.query.all()
         return jsonify([coach.to_dict() for coach in coaches]), 200
@@ -176,6 +192,7 @@ def get_all_coaches():
 @auth_bp.route('/upload_profile_picture', methods=['POST'])
 @jwt_required()
 def upload_profile_picture():
+    """Upload a profile picture"""
     if 'profile_picture' not in request.files:
         return jsonify({"message": "No file part"}), 400
 
@@ -187,8 +204,7 @@ def upload_profile_picture():
         identity = get_jwt_identity()
         user_id = identity['user_id']
         role = identity['role']
-        user = Coach.query.filter_by(coachID=user_id).first() if role == 'coach' else Cyclist.query.filter_by(
-            cyclistID=user_id).first()
+        user = Coach.query.filter_by(coachID=user_id).first() if role == 'coach' else Cyclist.query.filter_by(cyclistID=user_id).first()
 
         if not user:
             return jsonify({"message": "User not found"}), 404
@@ -198,7 +214,6 @@ def upload_profile_picture():
         new_filename = f"{role}_{uuid.uuid4().hex}.{extension}"
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'photos/profilePictures', new_filename)
 
-        # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         if user.profile_picture and user.profile_picture != 'photos/profilePictures/blankProfilePic.png':
@@ -215,6 +230,6 @@ def upload_profile_picture():
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+    """Check if the file is allowed based on the extension"""
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions

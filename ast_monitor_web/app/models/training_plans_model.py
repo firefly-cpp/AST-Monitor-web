@@ -1,8 +1,13 @@
+"""
+Models for training plans in the AST Monitor web application.
+"""
+
 from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, Interval, DateTime, Text, VARCHAR
 from sqlalchemy.orm import relationship
 from .database import db
 
 class TrainingPlan(db.Model):
+    """Model for a training plan."""
     __tablename__ = 'training_plans'
 
     plansID = Column(Integer, primary_key=True)
@@ -15,6 +20,7 @@ class TrainingPlan(db.Model):
     sessions = relationship('TrainingPlanTemplate', backref='training_plan', cascade="all, delete-orphan")
 
     def to_dict(self):
+        """Convert the TrainingPlan instance to a dictionary."""
         return {
             'plansID': self.plansID,
             'coachID': self.coachID,
@@ -25,6 +31,7 @@ class TrainingPlan(db.Model):
         }
 
 class CyclistTrainingPlan(db.Model):
+    """Model for associating cyclists with training plans."""
     __tablename__ = 'cyclist_training_plans'
 
     cyclistID = Column(Integer, ForeignKey('cyclists.cyclistID'), primary_key=True)
@@ -34,6 +41,7 @@ class CyclistTrainingPlan(db.Model):
     training_plan = relationship('TrainingPlan', backref=db.backref('cyclist_training_plans', lazy=True))
 
     def to_dict(self):
+        """Convert the CyclistTrainingPlan instance to a dictionary."""
         return {
             'cyclistID': self.cyclistID,
             'plansID': self.plansID,
@@ -42,6 +50,7 @@ class CyclistTrainingPlan(db.Model):
         }
 
 class TrainingPlanTemplate(db.Model):
+    """Model for a training plan template."""
     __tablename__ = 'training_plan_templates'
 
     sessionID = Column(Integer, primary_key=True)
@@ -53,6 +62,7 @@ class TrainingPlanTemplate(db.Model):
     notes = Column(Text, nullable=True)
 
     def to_dict(self):
+        """Convert the TrainingPlanTemplate instance to a dictionary."""
         return {
             'sessionID': self.sessionID,
             'planID': self.planID,
