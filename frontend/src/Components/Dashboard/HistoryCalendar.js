@@ -26,19 +26,23 @@ const endIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HistoryCalendar = ({ token }) => {
+const HistoryCalendar = ({ token, role }) => {
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const { sessionId } = useParams();
+    const { sessionId, id: cyclistId } = useParams();
 
     useEffect(() => {
         setError('');
         setLoading(true);
 
-        axios.get('http://localhost:5000/cyclist/sessions', {
+        const url = role === 'coach'
+            ? `http://localhost:5000/cyclist/sessions?cyclist_id=${cyclistId}`
+            : 'http://localhost:5000/cyclist/sessions';
+
+        axios.get(url, {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(response => {
@@ -50,14 +54,18 @@ const HistoryCalendar = ({ token }) => {
             setError('Failed to fetch sessions. Please try again later.');
             setLoading(false);
         });
-    }, [token]);
+    }, [token, role, cyclistId]);
 
     const onDayClick = (value) => {
         const selectedSession = sessions.find(session =>
             new Date(session.start_time).toDateString() === value.toDateString()
         );
         if (selectedSession) {
-            navigate(`/dashboard/calendar/${selectedSession.sessionID}`);
+            if (role === 'coach') {
+                navigate(`/dashboard/athlete/${cyclistId}/session/${selectedSession.sessionID}`);
+            } else {
+                navigate(`/dashboard/calendar/${selectedSession.sessionID}`);
+            }
         }
     };
 
@@ -66,7 +74,11 @@ const HistoryCalendar = ({ token }) => {
             setError('');
             setLoading(true);
 
-            axios.get(`http://localhost:5000/cyclist/session/${sessionId}`, {
+            const url = role === 'coach'
+                ? `http://localhost:5000/cyclist/session/${sessionId}?cyclist_id=${cyclistId}`
+                : `http://localhost:5000/cyclist/session/${sessionId}`;
+
+            axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             .then(response => {
@@ -79,7 +91,7 @@ const HistoryCalendar = ({ token }) => {
                 setLoading(false);
             });
         }
-    }, [sessionId, token]);
+    }, [sessionId, token, role, cyclistId]);
 
     if (loading) {
         return <div>Loading sessions...</div>;
@@ -101,34 +113,34 @@ const HistoryCalendar = ({ token }) => {
     });
 
     const getHillData = () => {
-    if (!selectedSession || !selectedSession.hill_data) {
-        return { labels: [], datasets: [] };
-    }
-    const { num_hills, avg_altitude, avg_ascent, distance_hills, hills_share } = selectedSession.hill_data;
-    return {
-        labels: ['Number of Hills', 'Avg Altitude (m)', 'Avg Ascent (m)', 'Distance Hills (km)', 'Hills Share (%)'],
-        datasets: [
-            {
-                label: 'Hill Data',
-                data: [
-                    num_hills,
-                    avg_altitude,
-                    avg_ascent,
-                    distance_hills,
-                    hills_share * 100,
-                ],
-                backgroundColor: [
-                    'rgba(75,192,192,0.6)',
-                    'rgba(75,75,192,0.6)',
-                    'rgba(192,75,75,0.6)',
-                    'rgba(75,192,75,0.6)',
-                    'rgba(192,192,75,0.6)',
-                ],
-                borderWidth: 1
-            },
-        ],
+        if (!selectedSession || !selectedSession.hill_data) {
+            return { labels: [], datasets: [] };
+        }
+        const { num_hills, avg_altitude, avg_ascent, distance_hills, hills_share } = selectedSession.hill_data;
+        return {
+            labels: ['Number of Hills', 'Avg Altitude (m)', 'Avg Ascent (m)', 'Distance Hills (km)', 'Hills Share (%)'],
+            datasets: [
+                {
+                    label: 'Hill Data',
+                    data: [
+                        num_hills,
+                        avg_altitude,
+                        avg_ascent,
+                        distance_hills,
+                        hills_share * 100,
+                    ],
+                    backgroundColor: [
+                        'rgba(75,192,192,0.6)',
+                        'rgba(75,75,192,0.6)',
+                        'rgba(192,75,75,0.6)',
+                        'rgba(75,192,75,0.6)',
+                        'rgba(192,192,75,0.6)',
+                    ],
+                    borderWidth: 1
+                },
+            ],
+        };
     };
-};
 
     const generatePDFReport = (selectedSession, token) => {
         if (!selectedSession) {

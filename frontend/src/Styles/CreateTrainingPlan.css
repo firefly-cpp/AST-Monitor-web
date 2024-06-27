@@ -28,6 +28,7 @@
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 5px;
+  margin-top: 5px;
 }
 
 .form-input, .form-checkbox {

@@ -1,5 +1,3 @@
-import io
-import json
 import logging
 import os
 
@@ -7,15 +5,14 @@ from flask_mail import Message
 from datetime import datetime, timedelta
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sport_activities_features import HillIdentification, TopographicFeatures
 from sqlalchemy import func, and_
 
-from .cyclist import get_weather_data
 from ..models.training_sessions_model import TrainingSession
 from ..models.usermodel import db, Coach, Cyclist
 from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan, TrainingPlanTemplate
 
 coach_bp = Blueprint('coach_bp', __name__)
+
 
 def parse_datetime(datetime_str):
     formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]
@@ -25,6 +22,7 @@ def parse_datetime(datetime_str):
         except ValueError:
             pass
     raise ValueError(f"time data '{datetime_str}' does not match any supported format")
+
 
 def parse_duration(duration_str):
     try:
@@ -43,8 +41,8 @@ def parse_duration(duration_str):
         try:
             return timedelta(minutes=int(duration_str))
         except ValueError:
-            raise ValueError(f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS', 'X days, HH:MM:SS' or 'minutes'")
-
+            raise ValueError(
+                f"Duration '{duration_str}' is not in the correct format 'HH:MM:SS', 'X days, HH:MM:SS' or 'minutes'")
 
 
 @coach_bp.route('/athletes', methods=['GET'])
@@ -65,7 +63,7 @@ def get_athletes():
         return jsonify({"message": "Coach not found"}), 404
 
     try:
-        max_session_id_subq = db.session.query(
+        max_session_id_sub = db.session.query(
             func.max(TrainingSession.sessionsID).label('max_session_id')
         ).filter(
             TrainingSession.cyclistID == Cyclist.cyclistID
@@ -83,7 +81,7 @@ def get_athletes():
         ).outerjoin(
             TrainingSession, and_(
                 Cyclist.cyclistID == TrainingSession.cyclistID,
-                TrainingSession.sessionsID == max_session_id_subq
+                TrainingSession.sessionsID == max_session_id_sub
             )
         ).filter(
             Cyclist.coachID == current_user_id
@@ -107,96 +105,6 @@ def get_athletes():
         logging.error(f"Error processing athletes data: {str(e)}")
         return jsonify({"error": "Error processing data"}), 500
 
-
-@coach_bp.route('/athlete/<int:id>', methods=['GET'])
-@jwt_required()
-def get_athlete_profile(id):
-    try:
-        athlete = Cyclist.query.get(id)
-        if not athlete:
-            return jsonify({"message": "Athlete not found"}), 404
-
-        sessions = TrainingSession.query.filter_by(cyclistID=id).all()
-
-        session_data = []
-        for session in sessions:
-            weather_data = {}
-            if session.positions:
-                start_position = json.loads(session.positions)[0]
-                lat, lon = start_position
-                weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-                if 'forecast' in weather_response and 'forecastday' in weather_response['forecast'] and weather_response['forecast']['forecastday']:
-                    day_weather = weather_response['forecast']['forecastday'][0]['day']
-                    weather_data = {
-                        "temp_c": day_weather.get('avgtemp_c'),
-                        "condition": day_weather.get('condition', {}).get('text', 'N/A'),
-                        "wind_kph": day_weather.get('maxwind_kph'),
-                        "humidity": day_weather.get('avghumidity')
-                    }
-
-            altitudes = json.loads(session.altitudes)
-            hills = HillIdentification(altitudes, 30)
-            hills.identify_hills()
-            all_hills = hills.return_hills()
-            topographic_features = TopographicFeatures(all_hills)
-            hill_data = {
-                "num_hills": topographic_features.num_of_hills(),
-                "avg_altitude": topographic_features.avg_altitude_of_hills([float(a) for a in altitudes]),
-                "avg_ascent": topographic_features.avg_ascent_of_hills([float(a) for a in altitudes]),
-                "distance_hills": topographic_features.distance_of_hills(json.loads(session.positions)),
-                "hills_share": topographic_features.share_of_hills(
-                    topographic_features.distance_of_hills(json.loads(session.positions)),
-                    float(session.total_distance)
-                )
-            }
-
-            session_data.append({
-                "sessionsID": session.sessionsID,
-                "altitude_avg": float(session.altitude_avg) if session.altitude_avg else None,
-                "altitude_max": float(session.altitude_max) if session.altitude_max else None,
-                "altitude_min": float(session.altitude_min) if session.altitude_min else None,
-                "ascent": float(session.ascent) if session.ascent else None,
-                "calories": float(session.calories) if session.calories else None,
-                "descent": float(session.descent) if session.descent else None,
-                "distance": float(session.distance) if session.distance else None,
-                "duration": session.duration.total_seconds() if session.duration else 0,
-                "hr_avg": session.hr_avg,
-                "hr_max": session.hr_max,
-                "hr_min": session.hr_min,
-                "total_distance": float(session.total_distance) if session.total_distance else None,
-                "altitudes": altitudes,
-                "heartrates": json.loads(session.heartrates),
-                "speeds": json.loads(session.speeds),
-                "start_time": session.start_time.isoformat(),
-                "positions": json.loads(session.positions) if session.positions else [],
-                "weather": weather_data,
-                "hill_data": hill_data
-            })
-
-        logging.info(f"Athlete ID: {athlete.cyclistID}")
-        logging.info(f"Session Data: {session_data}")
-
-        return jsonify({
-            "cyclistID": athlete.cyclistID,
-            "username": athlete.username,
-            "sessions": session_data
-        })
-    except Exception as e:
-        logging.error(f"Error fetching athlete profile: {str(e)}")
-        return jsonify({"error": "Error fetching athlete profile"}), 500
-
-
-
-@coach_bp.route('/athlete/sessions/<int:id>', methods=['GET'])
-@jwt_required()
-def get_sessions_for_calendar(id):
-    sessions = TrainingSession.query.filter_by(cyclistID=id).order_by(TrainingSession.start_time).all()
-    session_dates = [{
-        "sessionID": session.sessionsID,
-        "start_time": session.start_time.isoformat()
-    } for session in sessions]
-
-    return jsonify(session_dates)
 
 @coach_bp.route('/create_training_plan', methods=['POST'])
 @jwt_required()
@@ -298,6 +206,7 @@ def create_training_plan_template():
         logging.error(f"Error creating training plan template: {str(e)}")
         db.session.rollback()
         return jsonify({"error": f"Error creating training plan template: {str(e)}"}), 500
+
 
 @coach_bp.route('/delete_training_plan_template/<int:template_id>', methods=['DELETE'])
 @jwt_required()

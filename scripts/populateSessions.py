@@ -5,7 +5,7 @@ from ast_monitor_web.app.models.training_sessions_model import TrainingSession  
 from datetime import datetime, timezone, timedelta
 
 # Connect to your database
-engine = create_engine('postgresql://postgres:root@localhost/astmonitor')
+engine = create_engine('postgresql://postgres:nekipass578@localhost/astmonitor')
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -63,7 +63,7 @@ def insert_data(data_list, cyclist_id):
     session.close()
 
 # Usage Example
-data_file = 'C:/Users/Korisnik/Downloads/Sport5Rider3.json'
+data_file = 'C:/Users/Vanja/Desktop/Projekt/Sport5Rider3.json'
 data_list = load_json_data(data_file)
 insert_data(data_list, cyclist_id=1)
 

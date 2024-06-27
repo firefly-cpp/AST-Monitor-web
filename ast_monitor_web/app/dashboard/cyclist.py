@@ -17,23 +17,18 @@ cyclist_bp = Blueprint('cyclist_bp', __name__)
 WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
 WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
 
-RULES_FILE_PATH = 'csv/generated_rules.json'
 
 HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
 HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
 
-cyclist_bp = Blueprint('cyclist_bp', __name__)
 
-WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
-WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
 
 # Update paths to be relative to the project root
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
 RULES_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/generated_rules.json')
 CSV_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/treci.csv')
 
-HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
-HR_MIN_THRESHOLD = 50   # Example threshold for low heart rate
+
 
 @cyclist_bp.route('/run_niaarm', methods=['POST', 'OPTIONS'])
 @jwt_required()
@@ -113,11 +108,14 @@ def get_cyclist_sessions():
     current_user_id = identity['user_id']
     current_user_role = identity['role']
 
-    if current_user_role != 'cyclist':
-        return jsonify({"message": "Access denied"}), 403
+    cyclist_id = current_user_id
+    if current_user_role == 'coach':
+        cyclist_id = request.args.get('cyclist_id')
+        if not cyclist_id:
+            return jsonify({"message": "Cyclist ID is required"}), 400
 
     try:
-        sessions = TrainingSession.query.filter_by(cyclistID=current_user_id).order_by(TrainingSession.start_time).all()
+        sessions = TrainingSession.query.filter_by(cyclistID=cyclist_id).order_by(TrainingSession.start_time).all()
         session_dates = [{
             "sessionID": session.sessionsID,
             "start_time": session.start_time.isoformat()
@@ -125,8 +123,9 @@ def get_cyclist_sessions():
 
         return jsonify(session_dates)
     except Exception as e:
-        logging.error(f"Error fetching cyclist sessions: {str(e)}")
-        return jsonify({"error": "Error fetching cyclist sessions"}), 500
+        logging.error(f"Error fetching sessions: {str(e)}")
+        return jsonify({"error": "Error fetching sessions"}), 500
+
 
 @cyclist_bp.route('/session/<int:session_id>', methods=['GET'])
 @jwt_required()
@@ -135,11 +134,14 @@ def get_session_details(session_id):
     current_user_id = identity['user_id']
     current_user_role = identity['role']
 
-    if current_user_role != 'cyclist':
-        return jsonify({"message": "Access denied"}), 403
+    cyclist_id = current_user_id
+    if current_user_role == 'coach':
+        cyclist_id = request.args.get('cyclist_id')
+        if not cyclist_id:
+            return jsonify({"message": "Cyclist ID is required"}), 400
 
     try:
-        session = TrainingSession.query.filter_by(sessionsID=session_id, cyclistID=current_user_id).first()
+        session = TrainingSession.query.filter_by(sessionsID=session_id, cyclistID=cyclist_id).first()
         if not session:
             return jsonify({"message": "Session not found"}), 404
 
@@ -200,6 +202,7 @@ def get_session_details(session_id):
     except Exception as e:
         logging.error(f"Error fetching session details: {str(e)}")
         return jsonify({"error": "Error fetching session details"}), 500
+
 
 @cyclist_bp.route('/get_saved_rules', methods=['GET'])
 @jwt_required()
