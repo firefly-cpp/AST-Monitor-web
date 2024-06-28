@@ -1,0 +1,221 @@
+.create-training-plan {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.create-training-plan h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.training-plan-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.form-input, .form-checkbox {
+  width: 100%;
+  padding: 15px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus, .form-checkbox:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.form-fieldset {
+  grid-column: span 2;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  width: 100%;
+}
+
+.form-fieldset legend {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.cyclist-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cyclist-item {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyclist-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cyclist-item span {
+  margin-left: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.template-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.template-card {
+  position: relative;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.template-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.template-card.selected {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.delete-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.delete-icon:hover {
+  transform: scale(1.2);
+  filter: invert(24%) sepia(78%) saturate(6234%) hue-rotate(356deg) brightness(106%) contrast(101%);
+}
+
+.submit-button {
+  grid-column: span 2;
+  width: 100%;
+  padding: 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.create-template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-template-form label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 16px;
+}
+
+.create-template-form input, .create-template-form select, .create-template-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+}
+
+.create-template-form button {
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  margin-top: 10px;
+}
+
+.create-template-form button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+.select-all-container {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    justify-content: center;
+}
+
+.select-all-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.select-all-container span {
+    margin-left: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.select-all-container input {
+    margin-right: 10px;
+}

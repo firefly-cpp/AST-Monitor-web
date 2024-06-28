@@ -1,0 +1,60 @@
+/* src/Styles/AthleteOverview.css */
+.athlete-overview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  max-width: 1200px;
+  background: rgb(224, 224, 224, 0.7);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.athlete-overview h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.athlete-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 20px;
+  width: 100%;
+}
+
+.athlete-container {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  flex: 1 1 calc(25% - 20px);
+  max-width: 25%;
+  min-width: 200px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-align: left; /* Keep the content aligned to the left */
+}
+
+.athlete-container:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.athlete-container strong {
+  display: block;
+  font-size: 24px;
+  color: #4CAF50;
+  margin-bottom: 10px;
+  text-align: center; /* Center only the username */
+}
+
+.athlete-container p {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #555;
+}
