@@ -3,24 +3,51 @@ Utility functions for the AST Monitor web application.
 """
 
 import json
-import logging
 import requests
 from sport_activities_features import HillIdentification, TopographicFeatures
 
-WEATHER_API_URL = 'https://api.weatherapi.com/v1/history.json'
-WEATHER_API_KEY = '1b139147fb034e529e7205548243005'
+import openmeteo_requests
+import requests_cache
+from retry_requests import retry
+import logging
+
+WEATHER_API_URL = "https://archive-api.open-meteo.com/v1/archive?latitude=46.5547&longitude=15.6467&start_date=2010-01-01&end_date=2019-12-31&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,cloud_cover,wind_speed_100m"
+
+# Setup the Open-Meteo API client with cache and retry on error
+cache_session = requests_cache.CachedSession('.cache', expire_after=-1)
+retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
 def get_weather_data(lat, lon, start_time):
-    """Fetch weather data for the given location and date."""
-    response = requests.get(WEATHER_API_URL, params={
-        'key': WEATHER_API_KEY,
-        'q': f'{lat},{lon}',
-        'dt': start_time.split('T')[0]
-    })
-    weather_data = response.json()
-    logging.info("Weather data response: %s", weather_data)
-    return weather_data
+    try:
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "start_date": start_time.split('T')[0],
+            "end_date": start_time.split('T')[0],  # Same day for historical data
+            "hourly": ["temperature_2m", "apparent_temperature", "precipitation", "cloud_cover", "wind_speed_10m"]
+        }
+        responses = openmeteo.weather_api(WEATHER_API_URL, params=params)
+        
+        if not responses:
+            logging.warning("No response from weather API")
+            return {}
 
+        response = responses[0]
+        hourly = response.Hourly()
+        
+        weather_data = {
+            "temp_c": hourly.Variables(0).ValuesAsNumpy().mean() if hourly.Variables(0).ValuesAsNumpy().size > 0 else 'N/A',
+            "condition": 'N/A',  # Condition data not directly available
+            "wind_kph": hourly.Variables(4).ValuesAsNumpy().mean() * 3.6 if hourly.Variables(4).ValuesAsNumpy().size > 0 else 'N/A',  # Convert m/s to kph
+            "humidity": 'N/A'  # Humidity data not available in the sample
+        }
+        logging.info("Parsed weather data: %s", weather_data)
+        return weather_data
+    except Exception as e:
+        logging.error("Error fetching weather data: %s", e)
+        return {}
+    
 def compute_hill_data(session):
     """Compute hill data for a given session."""
     altitudes = json.loads(session.altitudes)
