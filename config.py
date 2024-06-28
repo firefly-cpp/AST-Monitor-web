@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI='postgresql://postgres:root@localhost/astmonitor'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Generate a new secret key each time
     MAIL_SERVER = 'smtp.gmail.com'
@@ -16,7 +16,7 @@ class Config:
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
     MAIL_DEBUG = True
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'ast_monitor_web', 'app', 'static')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static')
 
 class TestConfig(Config):
     TESTING = True
