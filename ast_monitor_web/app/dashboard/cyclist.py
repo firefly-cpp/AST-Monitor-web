@@ -64,13 +64,13 @@ def get_cyclist_sessions():
         return jsonify({"error": "Error fetching sessions"}), 500
 
 
-CSV_FILE_PATH =  os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/open-meteo-maribor.csv')
+CSV_MARIBOR =  os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/open-meteo-maribor.csv')
 
 
 def get_weather_data_from_csv(date):
     try:
         # Skip the first 2 lines which are metadata and an empty line
-        df = pd.read_csv(CSV_FILE_PATH, skiprows=2, parse_dates=['time'])
+        df = pd.read_csv(CSV_MARIBOR, skiprows=2, parse_dates=['time'])
         weather_data = df[df['time'].dt.date == date]
         if weather_data.empty:
             return {}
