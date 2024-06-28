@@ -1,0 +1,251 @@
+/* src/Styles/AthleteProfile.css */
+.athlete-profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.athlete-profile {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px 60px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 1s ease-in-out;
+  overflow: hidden;
+}
+
+.athlete-profile:hover {
+  transform: translateY(-10px);
+}
+
+.athlete-profile h2, .athlete-profile h3, .athlete-profile h4 {
+  margin-bottom: 10px;
+  font-size: 28px;
+  color: #333;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.athlete-profile p {
+  margin: 10px 0;
+  font-size: 18px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.react-calendar {
+  margin: 0 auto; /* Centering the calendar */
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 500px !important;
+}
+
+.athlete-profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.athlete-profile {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+}
+
+.top-section, .bottom-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.session-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin: 10px;
+  width: 160px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card h4 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.card p {
+  font-size: 16px;
+  color: #777;
+}
+
+.chart-container {
+  width: 100%;
+  margin: 20px 0;
+}
+
+.map-container {
+  width: 100%;
+  margin: 20px 0;
+}
+
+.weather-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.weather-card {
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px 20px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.weather-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.weather-card p {
+  font-size: 16px;
+  color: #555;
+  margin: 5px 0;
+}
+
+.weather-card strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.chart-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.session-details-table {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    text-align: left;
+}
+
+.session-details-table h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 28px;
+    color: #333;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.session-details-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+.session-details-table td {
+    padding: 10px;
+    font-size: 18px;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+}
+
+.session-details-table tr:last-child td {
+    border-bottom: none;
+}
+
+.session-details-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.session-details-table tr:hover {
+    background: rgba(30, 136, 229, 0.1);
+}
+
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.generate-pdf-button {
+    background-color: #4CAF50; /* Green background */
+    border: none; /* Remove borders */
+    color: white; /* White text */
+    padding: 15px 32px; /* Some padding */
+    text-align: center; /* Centered text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block; /* Make the buttons appear side-by-side */
+    font-size: 16px; /* Increase font size */
+    margin: 10px; /* Some margin */
+    cursor: pointer; /* Pointer/hand icon on hover */
+    border-radius: 10px; /* Rounded corners */
+    transition: background-color 0.3s, transform 0.3s; /* Animation for hover effect */
+}
+
+.generate-pdf-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly larger on hover */
+}
+
+.generate-pdf-button:active {
+    background-color: #3e8e41; /* Even darker green when clicked */
+    transform: scale(0.98); /* Slightly smaller when clicked */
+}

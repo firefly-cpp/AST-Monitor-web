@@ -1,0 +1,149 @@
+.import-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.import-preview-container:hover {
+    transform: translateY(-10px);
+}
+
+.import-preview-container h2 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    color: #333;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.import-preview-container p {
+    margin: 10px 0;
+    font-size: 18px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.error-message {
+    color: red;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.custom-file-input {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 15px 32px; /* Some padding */
+    font-size: 16px; /* Increase font size */
+    border: none; /* Remove borders */
+    border-radius: 10px; /* Rounded corners */
+    cursor: pointer; /* Pointer/hand icon on hover */
+    margin: 20px 0; /* Some margin */
+    transition: background-color 0.3s, transform 0.3s; /* Animation for hover effect */
+    text-align: center; /* Centered text */
+    position: relative; /* Position relative for file input */
+    overflow: hidden;
+}
+
+.custom-file-input input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.custom-file-input:hover {
+    background-color: #45a049; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly larger on hover */
+}
+
+.custom-file-input:active {
+    background-color: #3e8e41; /* Even darker green when clicked */
+    transform: scale(0.98); /* Slightly smaller when clicked */
+}
+
+.session-details-table {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    text-align: left;
+}
+
+.session-details-table h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 28px;
+    color: #333;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.session-details-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+.session-details-table td {
+    padding: 10px;
+    font-size: 18px;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+}
+
+.session-details-table tr:last-child td {
+    border-bottom: none;
+}
+
+.session-details-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.session-details-table tr:hover {
+    background: rgba(30, 136, 229, 0.1);
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 500px !important;
+}
+
+.map-container {
+    width: 100%;
+    margin: 20px 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

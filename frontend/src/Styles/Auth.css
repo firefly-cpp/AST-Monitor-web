@@ -1,0 +1,98 @@
+/* src/Styles/Auth.css */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh; /* Use full viewport height to center vertically */
+  padding-top: 60px; /* Ensure it starts below the navbar */
+}
+
+.auth-form, .account-type-selection {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 1s ease-in-out;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.auth-form:hover, .account-type-selection:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.auth-form h2, .account-type-selection h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+  font-weight: 500;
+}
+
+.auth-form label, .account-type-selection button {
+  display: block;
+  margin: 15px 0 5px;
+  font-size: 16px;
+  color: #555;
+}
+
+.auth-form input, .auth-form select {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+}
+
+.auth-form input:focus, .auth-form select:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.auth-form button, .account-type-selection button {
+  width: 100%;
+  padding: 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.auth-form button:hover, .account-type-selection button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.auth-form p {
+  color: #007bff;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 20px;
+  transition: color 0.3s ease;
+}
+
+.auth-form p:hover {
+  color: #0056b3;
+}
+
+.auth-form a {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.auth-form a:hover {
+  color: #0056b3;
+}
