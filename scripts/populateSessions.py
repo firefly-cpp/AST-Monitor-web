@@ -3,9 +3,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ast_monitor_web.app.models.training_sessions_model import TrainingSession  # Assuming your models file and class names
 from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # Connect to your database
-engine = create_engine('postgresql://postgres:nekipass578@localhost/astmonitor')
+engine = create_engine(os.getenv('SQLALCHEMY_DATABASE_URI'))
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -63,7 +66,7 @@ def insert_data(data_list, cyclist_id):
     session.close()
 
 # Usage Example
-data_file = 'C:/Users/Vanja/Desktop/Projekt/Sport5Rider3.json'
+data_file = 'Sport5Rider3.json'
 data_list = load_json_data(data_file)
 insert_data(data_list, cyclist_id=1)
 
