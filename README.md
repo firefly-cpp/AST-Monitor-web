@@ -85,12 +85,23 @@ CYCLearn is an innovative web platform designed to revolutionize cyclist trainin
 1. **Create a Coach and a User:**
 
 Use the application to create a coach and a user.
-2. **Run the Population Script:**
+
+2. **Extract zip files from `scripts` and put it so the path is like this: `scripts/Sport5Rider3.json`**
+
+3. **Run the Population Script:**
 
 - Navigate to the `scripts/populateSessions.py` file.
 - At the bottom of the script, modify the `insert_data(data_list, cyclist_id=1)` line to change the cyclist's ID as needed.
    ```bash
    python scripts/populateSessions.py
+  
+## Machine learning data
+
+### To run the part for health monitoring:
+
+**Extract zip files from `ast_monitor_web/csv/treci.zip` and put it so the path is like this: `ast_monitor_web/csv/treci.csv`**
+
+
 
 ## Technologies Used
 ### Frontend
