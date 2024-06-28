@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI='postgresql://postgres:root@localhost/astmonitor'
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Generate a new secret key each time
     MAIL_SERVER = 'smtp.gmail.com'
