@@ -291,3 +291,69 @@ h2 {
   padding-top: 10px;
   border-top: 1px solid #ddd;
 }
+
+/* New styles for metric cards and containers */
+.session-details-container, .weather-data-container {
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent background */
+}
+
+.session-details-container h3, .weather-data-container h3 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center; /* Centering the heading */
+}
+
+.session-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.session-cards .card {
+  padding: 10px;
+  margin: 10px;
+  flex: 1;
+  min-width: 150px;
+  border-left: 4px solid #4CAF50; /* Visual connection to the warning */
+  text-align: left;
+  background-color: rgba(240, 255, 240, 0.85); /* Slightly green background for differentiation */
+  border-radius: 8px;
+}
+
+.session-cards .card h4 {
+  font-size: 20px;
+  color: #4CAF50;
+  margin-bottom: 10px;
+}
+
+.session-cards .card p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+/* Ensure consistent styling for the main containers */
+.main-container {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.weather-details-container,
+.session-details-container,
+.map-container {
+  margin-top: 20px;
+}
+
+/* Add padding/margin between the calendar and session details */
+.calendar-container {
+  margin-bottom: 20px;
+}

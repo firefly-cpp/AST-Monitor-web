@@ -3,12 +3,14 @@ Cyclist-related routes and logic for the AST Monitor web application.
 """
 
 import json
-import logging
 import os
+import pandas as pd
+import logging
 from flask import jsonify, Blueprint, make_response, request, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from niaarm import Dataset, get_rules
 from niapy.algorithms.basic import DifferentialEvolution
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import numpy as np
 
 from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan
 from ..models.training_sessions_model import TrainingSession
@@ -62,6 +64,41 @@ def get_cyclist_sessions():
         return jsonify({"error": "Error fetching sessions"}), 500
 
 
+CSV_FILE_PATH =  os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/open-meteo-maribor.csv')
+
+
+def get_weather_data_from_csv(date):
+    try:
+        # Skip the first 2 lines which are metadata and an empty line
+        df = pd.read_csv(CSV_FILE_PATH, skiprows=2, parse_dates=['time'])
+        weather_data = df[df['time'].dt.date == date]
+        if weather_data.empty:
+            return {}
+        
+        weather_data = weather_data.iloc[0]
+        weather_info = {
+            "temp_c": weather_data['temperature_2m (°C)'] if not pd.isna(weather_data['temperature_2m (°C)']) else None,
+            "apparent_temp_c": weather_data['apparent_temperature (°C)'] if not pd.isna(weather_data['apparent_temperature (°C)']) else None,
+            "wind_kph": weather_data['wind_speed_100m (km/h)'] if not pd.isna(weather_data['wind_speed_100m (km/h)']) else None,
+            "humidity": weather_data['relative_humidity_2m (%)'] if not pd.isna(weather_data['relative_humidity_2m (%)']) else None,
+            "precipitation": weather_data['precipitation (mm)'] if not pd.isna(weather_data['precipitation (mm)']) else None,
+            "rain": weather_data['rain (mm)'] if not pd.isna(weather_data['rain (mm)']) else None,
+            "cloud_cover": weather_data['cloud_cover (%)'] if not pd.isna(weather_data['cloud_cover (%)']) else None
+        }
+        return weather_info
+    except Exception as e:
+        logging.error("Error fetching weather data from CSV: %s", e)
+        return {}
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        if isinstance(obj, np.float64):
+            return float(obj)
+        return super().default(obj)
+
 @cyclist_bp.route('/session/<int:session_id>', methods=['GET'])
 @jwt_required()
 def get_session_details(session_id):
@@ -79,27 +116,22 @@ def get_session_details(session_id):
     try:
         session = TrainingSession.query.filter_by(sessionsID=session_id, cyclistID=cyclist_id).first()
         if not session:
+            logging.error("Session not found")
             return jsonify({"message": "Session not found"}), 404
 
         weather_data = {}
         if session.positions:
-            start_position = json.loads(session.positions)[0]
-            lat, lon = start_position
-            weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-            if ('forecast' in weather_response and 'forecastday' in weather_response['forecast']
-                    and weather_response['forecast']['forecastday']):
-                day_weather = weather_response['forecast']['forecastday'][0]['day']
-                weather_data = {
-                    "temp_c": day_weather.get('avgtemp_c'),
-                    "condition": day_weather.get('condition', {}).get('text', 'N/A'),
-                    "wind_kph": day_weather.get('maxwind_kph'),
-                    "humidity": day_weather.get('avghumidity')
-                }
+            start_date = session.start_time.date()
+            logging.info("Fetching weather data for date: %s", start_date)
+            weather_data = get_weather_data_from_csv(start_date)
+            logging.info("Weather data: %s", weather_data)
 
         hill_data = compute_hill_data(session)
+        logging.info("Hill data: %s", hill_data)
 
+        # Convert int64 types to standard Python integers
         session_data = {
-            "sessionsID": session.sessionsID,
+            "sessionsID": int(session.sessionsID),
             "altitude_avg": float(session.altitude_avg) if session.altitude_avg else None,
             "altitude_max": float(session.altitude_max) if session.altitude_max else None,
             "altitude_min": float(session.altitude_min) if session.altitude_min else None,
@@ -121,12 +153,12 @@ def get_session_details(session_id):
             "hill_data": hill_data
         }
 
-        return jsonify(session_data)
+        logging.info("Session data prepared: %s", session_data)
+        response = json.dumps(session_data, cls=CustomJSONEncoder)
+        return response
     except Exception as e:
-        logging.error("Error fetching session details: %s", str(e))
+        logging.error("Error fetching session details: %s", str(e), exc_info=True)
         return jsonify({"error": "Error fetching session details"}), 500
-
-
 @cyclist_bp.route('/run_niaarm', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def run_niaarm():
