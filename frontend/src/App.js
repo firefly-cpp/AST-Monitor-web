@@ -10,6 +10,7 @@ import UserProfile from './Components/Authentication/UserProfile';
 import EditProfile from './Components/Authentication/EditProfile';
 import PasswordRecovery from './Components/Authentication/PasswordRecovery';
 import './App.css';
+import BackgroundImage from './Components/BackgroundImage/BackgroundImage'; // Import the BackgroundImage component
 
 const App = () => {
   const [auth, setAuth] = useState({
@@ -32,6 +33,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <div>
+        <BackgroundImage /> {/* Render the BackgroundImage component */}
         <Navbar isLoggedIn={!!auth.token} handleLogout={handleLogout} />
         <Routes>
           {!auth.token ? (
