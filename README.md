@@ -40,7 +40,7 @@ The CYCLearn project aims to develop an easy to use platform designed to analyze
 
 - Create a new PostgreSQL database.
 
-- Navigate to the database/creatingDBscript.sql file and run it in the query to set up the database schema.
+- Navigate to the `database/creatingDBscript.sql` file and run the query to set up the database schema.
 
 4. **Create an environment file:**
 
