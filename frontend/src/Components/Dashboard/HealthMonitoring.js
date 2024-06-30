@@ -5,7 +5,8 @@ import '../../Styles/Dashboard.css';
 const HealthMonitoring = ({ token }) => {
   const [rules, setRules] = useState(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingPatterns, setLoadingPatterns] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(false);
   const [warnings, setWarnings] = useState([]);
   const [sessionData] = useState({
     hr_max: 220,
@@ -23,7 +24,7 @@ const HealthMonitoring = ({ token }) => {
   });
 
   const handleRunNiaARM = async () => {
-    setLoading(true);
+    setLoadingPatterns(true);
     setError('');
     try {
       const response = await axios.post('http://localhost:5000/cyclist/run_niaarm', {}, {
@@ -35,11 +36,11 @@ const HealthMonitoring = ({ token }) => {
       console.error('Error running NiaARM:', error.response ? error.response.data : error.message);
       setError('Failed to run NiaARM: ' + (error.response ? error.response.data.error : error.message));
     }
-    setLoading(false);
+    setLoadingPatterns(false);
   };
 
   const handleCheckSession = async () => {
-    setLoading(true);
+    setLoadingSession(true);
     setError('');
     try {
       const response = await axios.post('http://localhost:5000/cyclist/check_session', sessionData, {
@@ -50,7 +51,7 @@ const HealthMonitoring = ({ token }) => {
       console.error('Error checking session:', error.response ? error.response.data : error.message);
       setError('Failed to check session: ' + (error.response ? error.response.data.error : error.message));
     }
-    setLoading(false);
+    setLoadingSession(false);
   };
 
   useEffect(() => {
@@ -183,15 +184,15 @@ const HealthMonitoring = ({ token }) => {
       <div className="button-group">
         <div className="button-section">
           <p>Run the program to find health patterns from your previous training sessions using machine learning.</p>
-          <button onClick={handleRunNiaARM} disabled={loading}>
-            {loading ? 'Running NiaARM...' : 'Find Patterns'}
+          <button onClick={handleRunNiaARM} disabled={loadingPatterns}>
+            {loadingPatterns ? 'Running NiaARM...' : 'Find Patterns'}
           </button>
         </div>
         <hr className="button-divider" />
         <div className="button-section">
           <p>Check the last session for any health risks identified through data analysis.</p>
-          <button onClick={handleCheckSession} disabled={loading}>
-            {loading ? 'Checking Session...' : 'Check Session'}
+          <button onClick={handleCheckSession} disabled={loadingSession}>
+            {loadingSession ? 'Checking Session...' : 'Check Session'}
           </button>
         </div>
       </div>

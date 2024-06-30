@@ -5,15 +5,18 @@ Transforming Cyclist Training with Advanced Automation and Data Analysis
 
 ## About
 
-CYCLearn is an innovative web platform designed to revolutionize cyclist training through data analysis and advanced features. Leveraging real-time data such as heart rate, speed, and location collected through integration with the open-source cycling computer AST-Monitor, CYCLearn enables coaches to efficiently manage training sessions, track performance, and gain valuable insights into athlete progress. Our platform combines data and technology to help coaches and athletes achieve new heights in their sports achievements.
-
+The CYCLearn project aims to develop an easy to use platform designed to analyze and visualize cyclists' training sessions data using data automation and analytics. This project targets enhancing training efficiency through predictive analysis and providing valuable insights into athlete performance. By integrating machine learning techniques with a user-friendly web platform, CYCLearn aims to to improve performance and health monitoring. This platfort leverages different technologies to offer a comprehensive solution for coaches and cyclists to monitor, evaluate, and improve their training regimens.
 ## Key features
 
-- **Training Management:** Efficiently manage training sessions and schedules for cyclists.
-- **Real-Time Performance Analysis:** Track and compare performance data dynamically with interactive graphs and trend analysis.
-- **Map Visualization:** Draw and update cyclists' routes on interactive maps using GPS data.
-- **Advanced Analytical Dashboards:** Customized dashboards provide insights into key performance indicators (KPIs) and trend analysis.
-- **Data Import and Export:** Import and export training data in various formats for external analysis or sharing with other platforms.
+
+- **Visualize Training Metrics:** Provide detailed visualizations of various training metrics such as heart rate, altitude, distance, and speed to give users a comprehensive view of their performance.
+- **Analyze Performance:** Use advanced machine learning algorithms to discover patterns and insights from the data.
+- **Predictive Analytics:** Implement predictive analysis to foresee potential health risks and performance issues.
+- **Enhance Training Efficiency:** Offer actionable insights and recommendations to improve training effectiveness.
+- **User-Friendly Interface:** Provide an intuitive and easy-to-use interface for both coaches and cyclists.
+
+
+
 
 ## Backend setup
 
@@ -37,7 +40,7 @@ CYCLearn is an innovative web platform designed to revolutionize cyclist trainin
 
 - Create a new PostgreSQL database.
 
-- Navigate to the database/creatingDBscript.sql file and run it in the query to set up the database schema.
+- Navigate to the `database/creatingDBscript.sql` file and run the query to set up the database schema.
 
 4. **Create an environment file:**
 
@@ -84,7 +87,9 @@ CYCLearn is an innovative web platform designed to revolutionize cyclist trainin
 
 1. **Create a Coach and a Cyclist:**
 
+
 Use the application to create a coach and a cyclist.
+
 
 2. **Extract zip files from `scripts` and put it so the path is like this: `scripts/Sport5Rider3.json`**
 
