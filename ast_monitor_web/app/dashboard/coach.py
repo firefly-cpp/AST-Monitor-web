@@ -17,9 +17,18 @@ from ..models.training_plans_model import TrainingPlan, CyclistTrainingPlan, Tra
 
 coach_bp = Blueprint('coach_bp', __name__)
 
-
 def parse_datetime(datetime_str):
-    """Parse a datetime string into a datetime object."""
+    """Parse a datetime string into a datetime object.
+
+    Args:
+        datetime_str (str): The datetime string to parse.
+
+    Returns:
+        datetime: The parsed datetime object.
+
+    Raises:
+        ValueError: If the datetime string does not match any supported format.
+    """
     formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"]
     for fmt in formats:
         try:
@@ -28,9 +37,18 @@ def parse_datetime(datetime_str):
             pass
     raise ValueError(f"time data '{datetime_str}' does not match any supported format")
 
-
 def parse_duration(duration_str):
-    """Parse a duration string into a timedelta object."""
+    """Parse a duration string into a timedelta object.
+
+    Args:
+        duration_str (str): The duration string to parse.
+
+    Returns:
+        timedelta: The parsed timedelta object.
+
+    Raises:
+        ValueError: If the duration string is not in the correct format.
+    """
     try:
         parts = duration_str.split(", ")
         if len(parts) == 2:
@@ -49,11 +67,14 @@ def parse_duration(duration_str):
                 "'X days, HH:MM:SS' or 'minutes'"
             ) from e
 
-
 @coach_bp.route('/athletes', methods=['GET'])
 @jwt_required()
 def get_athletes():
-    """Get a list of athletes for the current coach."""
+    """Get a list of athletes for the current coach.
+
+    Returns:
+        Response: JSON response with a list of athletes and their last session data.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -111,11 +132,14 @@ def get_athletes():
         logging.error("Error processing athletes data: %s", str(e))
         return jsonify({"error": "Error processing data"}), 500
 
-
 @coach_bp.route('/create_training_plan', methods=['POST'])
 @jwt_required()
 def create_training_plan():
-    """Create a new training plan."""
+    """Create a new training plan.
+
+    Returns:
+        Response: JSON response with success message and plan ID, or error message and status code.
+    """
     data = request.get_json()
     coach_id = get_jwt_identity()['user_id']
 
@@ -168,9 +192,13 @@ def create_training_plan():
         db.session.rollback()
         return jsonify({"error": f"Error creating training plan: {str(e)}"}), 500
 
-
 def send_training_plan_email(cyclist_email, training_plan):
-    """Send an email with the new training plan details."""
+    """Send an email with the new training plan details.
+
+    Args:
+        cyclist_email (str): The email address of the cyclist.
+        training_plan (TrainingPlan): The training plan details.
+    """
     from ..__init__ import mail
     msg = Message(
         subject="New Training Plan",
@@ -185,19 +213,25 @@ def send_training_plan_email(cyclist_email, training_plan):
     )
     mail.send(msg)
 
-
 @coach_bp.route('/training_plan_templates', methods=['GET'])
 @jwt_required()
 def get_training_plan_templates():
-    """Get all training plan templates."""
+    """Get all training plan templates.
+
+    Returns:
+        Response: JSON response with a list of training plan templates.
+    """
     templates = TrainingPlanTemplate.query.all()
     return jsonify([template.to_dict() for template in templates])
-
 
 @coach_bp.route('/create_training_plan_template', methods=['POST'])
 @jwt_required()
 def create_training_plan_template():
-    """Create a new training plan template."""
+    """Create a new training plan template.
+
+    Returns:
+        Response: JSON response with the created training plan template, or error message and status code.
+    """
     data = request.get_json()
 
     try:
@@ -217,11 +251,17 @@ def create_training_plan_template():
         db.session.rollback()
         return jsonify({"error": f"Error creating training plan template: {str(e)}"}), 500
 
-
 @coach_bp.route('/delete_training_plan_template/<int:template_id>', methods=['DELETE'])
 @jwt_required()
 def delete_training_plan_template(template_id):
-    """Delete a training plan template."""
+    """Delete a training plan template.
+
+    Args:
+        template_id (int): The ID of the training plan template to delete.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     try:
         template = TrainingPlanTemplate.query.get(template_id)
         if not template:

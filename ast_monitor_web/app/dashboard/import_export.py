@@ -22,11 +22,17 @@ from ..utils import get_weather_data, compute_hill_data
 
 import_export_bp = Blueprint('import_export_bp', __name__)
 
-
 @import_export_bp.route('/athlete/session/<int:session_id>/export_pdf', methods=['GET'])
 @jwt_required()
 def export_session_report(session_id):
-    """Export session report as a PDF."""
+    """Export session report as a PDF.
+
+    Args:
+        session_id (int): The ID of the session to export.
+
+    Returns:
+        Response: A Flask response sending the generated PDF file.
+    """
     try:
         logging.debug("Attempting to fetch session ID: %d", session_id)
         session = TrainingSession.query.get(session_id)
@@ -201,11 +207,17 @@ def export_session_report(session_id):
         logging.error("Error generating PDF report: %s", str(e))
         return jsonify({"error": "Error generating PDF report"}), 500
 
-
 @import_export_bp.route('/athlete/session/<int:session_id>/export_json', methods=['GET'])
 @jwt_required()
 def export_session_json(session_id):
-    """Export session data as JSON."""
+    """Export session data as JSON.
+
+    Args:
+        session_id (int): The ID of the session to export.
+
+    Returns:
+        Response: A Flask response sending the session data as JSON.
+    """
     try:
         session = TrainingSession.query.get(session_id)
         if not session:

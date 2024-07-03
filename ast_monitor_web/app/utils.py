@@ -19,6 +19,16 @@ retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 def get_weather_data(lat, lon, start_time):
+    """Fetch historical weather data for a specific location and time.
+
+    Args:
+        lat (float): Latitude of the location.
+        lon (float): Longitude of the location.
+        start_time (str): Start time in ISO format.
+
+    Returns:
+        dict: Dictionary containing weather data including temperature, condition, wind speed, and humidity.
+    """
     try:
         params = {
             "latitude": lat,
@@ -47,9 +57,16 @@ def get_weather_data(lat, lon, start_time):
     except Exception as e:
         logging.error("Error fetching weather data: %s", e)
         return {}
-    
+
 def compute_hill_data(session):
-    """Compute hill data for a given session."""
+    """Compute hill data for a given session.
+
+    Args:
+        session (object): Session object containing altitude and position data.
+
+    Returns:
+        dict: Dictionary containing hill data including number of hills, average altitude, average ascent, distance of hills, and share of hills.
+    """
     altitudes = json.loads(session.altitudes)
     hills = HillIdentification(altitudes, 30)
     hills.identify_hills()
