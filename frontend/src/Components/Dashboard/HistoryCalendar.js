@@ -200,6 +200,7 @@ const HistoryCalendar = ({ token, role }) => {
             link.href = window.URL.createObjectURL(blob);
             link.setAttribute('download', `session_${new Date(selectedSession.start_time).toLocaleDateString()}.json`);
             document.body.appendChild(link);
+            link.click();
         })
         .catch(error => {
             console.error(`Error exporting ${format} data:`, error);
