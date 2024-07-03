@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS public.coaches
     password character varying(255) COLLATE pg_catalog."default" NOT NULL,
     email character varying(100) COLLATE pg_catalog."default" NOT NULL,
     profile_picture character varying(255) COLLATE pg_catalog."default",
+    name character varying(50) COLLATE pg_catalog."default",
+    surname character varying(50) COLLATE pg_catalog."default",
     CONSTRAINT coaches_pkey PRIMARY KEY ("coachID"),
     CONSTRAINT coaches_email_unique UNIQUE (email),
     CONSTRAINT coaches_username_key UNIQUE (username)
@@ -33,6 +35,8 @@ CREATE TABLE IF NOT EXISTS public.cyclists
     height_cm integer,
     weight_kg integer,
     profile_picture character varying(255) COLLATE pg_catalog."default",
+    name character varying(50) COLLATE pg_catalog."default",
+    surname character varying(50) COLLATE pg_catalog."default",
     CONSTRAINT cyclists_pkey PRIMARY KEY ("cyclistID"),
     CONSTRAINT cyclists_email_unique UNIQUE (email),
     CONSTRAINT cyclists_username_key UNIQUE (username)
@@ -44,9 +48,9 @@ CREATE TABLE IF NOT EXISTS public.training_plan_templates
     "planID" integer,
     type character varying(50) COLLATE pg_catalog."default" NOT NULL,
     duration interval NOT NULL,
-    distance numeric NOT NULL,
     intensity character varying(50) COLLATE pg_catalog."default",
     notes text COLLATE pg_catalog."default",
+    distance numeric NOT NULL,
     CONSTRAINT training_plan_templates_pkey PRIMARY KEY ("sessionID")
 );
 

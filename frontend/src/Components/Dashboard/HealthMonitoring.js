@@ -70,32 +70,25 @@ const HealthMonitoring = ({ token }) => {
     fetchSavedRules();
   }, [token]);
 
-  const formatWarningMessage = (warning, pattern) => {
-    const lhsConditions = (pattern.lhs || []).map(condition => {
-      const match = condition.match(/(.+?)\((.+)\)/);
-      if (match) {
-        const [name, range] = match.slice(1, 3);
-        return `${name} is between <strong>${range}</strong>`;
-      }
-      return condition;
-    }).join(' and ');
+  const formatNumber = (number) => {
+    return parseFloat(number).toFixed(2);
+  };
 
-    const rhsConditions = (pattern.rhs || []).map(condition => {
-      const match = condition.match(/(.+?)\((.+)\)/);
-      if (match) {
-        const [name, range] = match.slice(1, 3);
-        return `${name} is between <strong>${range}</strong>`;
-      }
-      return condition;
-    }).join(' and ');
+  const formatCondition = (condition) => {
+    return condition.replace(/(\d+\.\d+)/g, (match) => formatNumber(match));
+  };
+
+  const formatWarningMessage = (warning, pattern) => {
+    const lhsConditions = (pattern.lhs || []).map(condition => formatCondition(condition)).join(' and ');
+    const rhsConditions = (pattern.rhs || []).map(condition => formatCondition(condition)).join(' and ');
 
     let heartRateWarning = '';
     let warningTitle = 'Heart Rate Warning';
 
     if (warning.includes('hr_max')) {
-      const hrMaxMatch = warning.match(/hr_max\(\[([\d.]+), ([\d.]+)\]\)/);
+      const hrMaxMatch = warning.match(/hr_max\(\[(.+)\]\)/);
       if (hrMaxMatch) {
-        const hrMaxValue = parseFloat(hrMaxMatch[2]);
+        const hrMaxValue = parseFloat(hrMaxMatch[1].split(', ')[1]);
         if (hrMaxValue > 200) {
           heartRateWarning = ' <strong>Your maximum heart rate is too high.</strong>';
           warningTitle = 'High Heart Rate Warning';
@@ -103,9 +96,9 @@ const HealthMonitoring = ({ token }) => {
       }
     }
     if (warning.includes('hr_min')) {
-      const hrMinMatch = warning.match(/hr_min\(\[([\d.]+), ([\d.]+)\]\)/);
+      const hrMinMatch = warning.match(/hr_min\(\[(.+)\]\)/);
       if (hrMinMatch) {
-        const hrMinValue = parseFloat(hrMinMatch[1]);
+        const hrMinValue = parseFloat(hrMinMatch[1].split(', ')[0]);
         if (hrMinValue < 50) {
           heartRateWarning = ' <strong>Your minimum heart rate is too low.</strong>';
           warningTitle = 'Low Heart Rate Warning';
@@ -122,7 +115,7 @@ const HealthMonitoring = ({ token }) => {
   const getRelevantRules = (warning) => {
     if (!rules) return [];
 
-    const warningConditions = warning.match(/(\w+)\(\[([\d.]+), ([\d.]+)\]\)|(\w+)\(([\d-: ]+)\)/g);
+    const warningConditions = warning.match(/(\w+)\(\[(.+?)\]\)/g);
     if (!warningConditions) return [];
 
     const relevantRules = rules.filter(rule => {
@@ -136,8 +129,8 @@ const HealthMonitoring = ({ token }) => {
   const renderRule = (rule, index) => (
     <div key={index} className="rule-card">
       <h4>Based on Injury Pattern</h4>
-      <p><strong>WHEN:</strong> {(rule.lhs || []).join(' and ')}</p>
-      <p><strong>THEN:</strong> {(rule.rhs || []).join(' and ')}</p>
+      <p><strong>WHEN:</strong> {(rule.lhs || []).map(formatCondition).join(' and ')}</p>
+      <p><strong>THEN:</strong> {(rule.rhs || []).map(formatCondition).join(' and ')}</p>
       <p><strong>Confidence: </strong>{rule.confidence.toFixed(2)} - Indicates how often the rule is correct.</p>
     </div>
   );

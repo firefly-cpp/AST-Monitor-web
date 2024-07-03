@@ -249,3 +249,62 @@
     background-color: #3e8e41; /* Even darker green when clicked */
     transform: scale(0.98); /* Slightly smaller when clicked */
 }
+
+/* New CSS for Cyclist Info Container */
+.cyclist-info-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 1s ease-in-out;
+    text-align: center;
+}
+
+.cyclist-info-container:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cyclist-info-container h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.cyclist-info-container p {
+    font-size: 18px;
+    color: #555;
+    margin: 10px 0;
+}
+
+.cyclist-info-container p strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Align items at the bottom */
+    z-index: 1000;
+}
+
+.loading-message {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px; /* Add some margin at the bottom */
+}

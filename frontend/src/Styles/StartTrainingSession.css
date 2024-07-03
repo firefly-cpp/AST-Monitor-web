@@ -1,10 +1,12 @@
+/* StartTrainingSession.css */
+
 .start-training-session {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 90%;
     max-width: 1200px;
-    background: rgb(224, 224, 224, 0.7);
+    background: rgba(224, 224, 224, 0.7);
     padding: 20px;
     border-radius: 20px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
@@ -20,7 +22,7 @@
 
 .sensor-container {
     width: 100%;
-    height: 300px;
+    height: 600px; /* Adjusted height for iframe */
     background: #fff;
     border: 2px dashed #4CAF50;
     border-radius: 15px;
@@ -28,9 +30,13 @@
     justify-content: center;
     align-items: center;
     margin-bottom: 20px;
-    color: #555;
-    font-size: 18px;
-    text-align: center;
+    overflow: hidden; /* Ensures iframe fits within the container */
+}
+
+.sensor-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .end-workout-button {

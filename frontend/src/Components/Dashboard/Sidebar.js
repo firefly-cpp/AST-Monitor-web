@@ -10,7 +10,7 @@ const Sidebar = ({ role }) => {
                 {role === 'coach' ? (
                     <>
                         <li>
-                            <NavLink to="/dashboard/overview">Athlete Overview</NavLink>
+                            <NavLink to="/dashboard/overview">Cyclist Overview</NavLink>
                         </li>
                         <li>
                             <NavLink to="/dashboard/create-plan">Create Training Plan</NavLink>

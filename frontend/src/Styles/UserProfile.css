@@ -1,3 +1,4 @@
+/* src/Styles/UserProfile.css */
 .profile-page {
   display: flex;
   justify-content: center;
@@ -51,7 +52,10 @@
 }
 
 .profile-container button {
+  display: block;
+  width: 100%;
   padding: 15px 30px;
+  margin-bottom: 10px;
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -68,13 +72,37 @@
 }
 
 .rounded-avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin: 0 auto;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
 }
 
+.cyclist-list {
+  text-align: left;
+  margin-top: 20px;
+}
+
+.cyclist-list h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.cyclist-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.cyclist-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+  color: #555;
+}
+
+/* src/Styles/EditProfile.css */
 .edit-profile-page {
   display: flex;
   justify-content: center;
@@ -115,7 +143,8 @@
 }
 
 .edit-profile-container form input[type="text"],
-.edit-profile-container form input[type="number"] {
+.edit-profile-container form input[type="number"],
+.edit-profile-container form select {
   width: 100%;
   padding: 10px;
   margin-bottom: 20px;
@@ -158,6 +187,8 @@
 }
 
 .update-profile-button {
+  display: block;
+  width: 100%;
   padding: 15px 30px;
   background-color: #4CAF50;
   color: white;

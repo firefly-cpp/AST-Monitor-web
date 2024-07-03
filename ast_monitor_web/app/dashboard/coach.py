@@ -81,7 +81,7 @@ def get_athletes():
 
     logging.info("Current user ID: %s, Role: %s", current_user_id, current_user_role)
 
-    if current_user_role != 'coach':
+    if (current_user_role != 'coach'):
         return jsonify({"message": "Access denied"}), 403
 
     coach = Coach.query.filter_by(coachID=current_user_id).first()
@@ -99,6 +99,8 @@ def get_athletes():
         athletes = db.session.query(
             Cyclist.username,
             Cyclist.cyclistID,
+            Cyclist.name,
+            Cyclist.surname,
             TrainingSession.altitude_avg,
             TrainingSession.calories,
             TrainingSession.duration,
@@ -117,6 +119,8 @@ def get_athletes():
         athlete_data = [{
             "cyclistID": athlete.cyclistID,
             "username": athlete.username,
+            "name": athlete.name,
+            "surname": athlete.surname,
             "last_session": {
                 "time": athlete.last_session_time.isoformat() if athlete.last_session_time else None,
                 "altitude_avg": float(athlete.altitude_avg) if athlete.altitude_avg is not None else None,
@@ -274,3 +278,20 @@ def delete_training_plan_template(template_id):
         logging.error("Error deleting training plan template: %s", str(e))
         db.session.rollback()
         return jsonify({"error": f"Error deleting training plan template: {str(e)}"}), 500
+
+@coach_bp.route('/cyclist/<int:cyclist_id>', methods=['GET'])
+@jwt_required()
+def get_cyclist(cyclist_id):
+    """Get details of a specific cyclist."""
+    identity = get_jwt_identity()
+    current_user_id = identity['user_id']
+    current_user_role = identity['role']
+
+    if current_user_role != 'coach':
+        return jsonify({"message": "Access denied"}), 403
+
+    cyclist = Cyclist.query.filter_by(cyclistID=cyclist_id, coachID=current_user_id).first()
+    if not cyclist:
+        return jsonify({"message": "Cyclist not found or access denied"}), 404
+
+    return jsonify(cyclist.to_dict()), 200
