@@ -5,9 +5,13 @@ import '../../Styles/EditProfile.css';
 
 const EditProfile = () => {
     const [username, setUsername] = useState('');
+    const [name, setName] = useState('');
+    const [surname, setSurname] = useState('');
     const [role, setRole] = useState('');
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
+    const [coachID, setCoachID] = useState('');
+    const [coaches, setCoaches] = useState([]);
     const [profilePicture, setProfilePicture] = useState(null);
     const [profilePictureName, setProfilePictureName] = useState('');
     const navigate = useNavigate();
@@ -25,15 +29,28 @@ const EditProfile = () => {
                 });
                 const data = response.data;
                 setUsername(data.username);
+                setName(data.name);
+                setSurname(data.surname);
                 setRole(data.role);  // Ensure the role is set correctly
                 console.log('Fetched profile:', data);  // Debugging log
                 if (data.role === 'cyclist') {
                     setHeight(data.height_cm || '');
                     setWeight(data.weight_kg || '');
+                    setCoachID(data.coachID || ''); // Prepopulate coachID
+                    fetchCoaches();
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error.response?.data);
                 navigate('/login');
+            }
+        };
+
+        const fetchCoaches = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/auth/coaches');
+                setCoaches(response.data);
+            } catch (error) {
+                console.error('Error fetching coaches:', error);
             }
         };
 
@@ -45,9 +62,12 @@ const EditProfile = () => {
         const token = localStorage.getItem('token');
         const updateData = {
             username,
+            name,
+            surname,
             ...(role === 'cyclist' && {
                 height_cm: height !== '' ? height : null,
-                weight_kg: weight !== '' ? weight : null
+                weight_kg: weight !== '' ? weight : null,
+                coachID: coachID !== '' ? coachID : null
             })
         };
 
@@ -87,6 +107,14 @@ const EditProfile = () => {
                         Username:
                         <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
                     </label>
+                    <label>
+                        Name:
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} />
+                    </label>
+                    <label>
+                        Surname:
+                        <input type="text" value={surname} onChange={e => setSurname(e.target.value)} />
+                    </label>
                     {role === 'cyclist' && (
                         <>
                             <label>
@@ -96,6 +124,17 @@ const EditProfile = () => {
                             <label>
                                 Weight (kg):
                                 <input type="number" value={weight} onChange={e => setWeight(e.target.value)} />
+                            </label>
+                            <label>
+                                Coach:
+                                <select value={coachID} onChange={e => setCoachID(e.target.value)}>
+                                    <option value="">Select a Coach</option>
+                                    {coaches.map(coach => (
+                                        <option key={coach.coachID} value={coach.coachID}>
+                                            {coach.name} {coach.surname}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                         </>
                     )}

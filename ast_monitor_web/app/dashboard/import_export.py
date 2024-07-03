@@ -6,7 +6,7 @@ import io
 import json
 import logging
 import tempfile
-import requests
+import numpy as np
 import matplotlib.pyplot as plt
 import folium
 from flask import jsonify, Blueprint, send_file, current_app
@@ -17,6 +17,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
 
+from .cyclist import get_weather_data_from_csv
 from ..models.training_sessions_model import TrainingSession
 from ..utils import get_weather_data, compute_hill_data
 
@@ -39,16 +40,7 @@ def export_session_report(session_id):
         if session.positions:
             start_position = json.loads(session.positions)[0]
             lat, lon = start_position
-            weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-            if ('forecast' in weather_response and 'forecastday' in weather_response['forecast']
-                    and weather_response['forecast']['forecastday']):
-                day_weather = weather_response['forecast']['forecastday'][0]['day']
-                weather_data = {
-                    "temp_c": day_weather.get('avgtemp_c'),
-                    "condition": day_weather.get('condition', {}).get('text', 'N/A'),
-                    "wind_kph": day_weather.get('maxwind_kph'),
-                    "humidity": day_weather.get('avghumidity')
-                }
+            weather_data = get_weather_data_from_csv(session.start_time.date())
 
         hill_data = compute_hill_data(session)
 
@@ -85,8 +77,17 @@ def export_session_report(session_id):
         if weather_data:
             pdf.drawString(30, y, "Weather Data:")
             y -= 15
-            for key, value in weather_data.items():
-                pdf.drawString(30, y, f"{key}: {value}")
+            weather_details = [
+                f"Temperature: {weather_data['temp_c']:.2f}°C" if weather_data['temp_c'] is not None else "Temperature: N/A",
+                f"Apparent Temperature: {weather_data['apparent_temp_c']:.2f}°C" if weather_data['apparent_temp_c'] is not None else "Apparent Temperature: N/A",
+                f"Wind Speed: {weather_data['wind_kph']:.2f} kph" if weather_data['wind_kph'] is not None else "Wind Speed: N/A",
+                f"Humidity: {weather_data['humidity']:.2f}%" if weather_data['humidity'] is not None else "Humidity: N/A",
+                f"Precipitation: {weather_data['precipitation']:.2f} mm" if weather_data['precipitation'] is not None else "Precipitation: N/A",
+                f"Rain: {weather_data['rain']:.2f} mm" if weather_data['rain'] is not None else "Rain: N/A",
+                f"Cloud Cover: {weather_data['cloud_cover']:.2f}%" if weather_data['cloud_cover'] is not None else "Cloud Cover: N/A"
+            ]
+            for detail in weather_details:
+                pdf.drawString(30, y, detail)
                 y -= 15
 
         # Hill data
@@ -216,18 +217,21 @@ def export_session_json(session_id):
         if session.positions:
             start_position = json.loads(session.positions)[0]
             lat, lon = start_position
-            weather_response = get_weather_data(lat, lon, session.start_time.isoformat())
-            if ('forecast' in weather_response and 'forecastday' in weather_response['forecast']
-                    and weather_response['forecast']['forecastday']):
-                day_weather = weather_response['forecast']['forecastday'][0]['day']
-                weather_data = {
-                    "temp_c": day_weather.get('avgtemp_c'),
-                    "condition": day_weather.get('condition', {}).get('text', 'N/A'),
-                    "wind_kph": day_weather.get('maxwind_kph'),
-                    "humidity": day_weather.get('avghumidity')
-                }
+            weather_data = get_weather_data_from_csv(session.start_time.date())
 
         hill_data = compute_hill_data(session)
+
+        def convert_to_native_types(data):
+            if isinstance(data, dict):
+                return {k: convert_to_native_types(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [convert_to_native_types(v) for v in data]
+            elif isinstance(data, (np.integer, np.int32, np.int64)):
+                return int(data)
+            elif isinstance(data, (np.floating, np.float32, np.float64)):
+                return float(data)
+            else:
+                return data
 
         session_data = {
             "cyclistID": session.cyclistID,
@@ -249,8 +253,8 @@ def export_session_json(session_id):
             "speeds": json.loads(session.speeds),
             "start_time": session.start_time.isoformat(),
             "positions": json.loads(session.positions) if session.positions else [],
-            "weather": weather_data,
-            "hill_data": hill_data
+            "weather": convert_to_native_types(weather_data),
+            "hill_data": convert_to_native_types(hill_data)
         }
 
         return jsonify(session_data)

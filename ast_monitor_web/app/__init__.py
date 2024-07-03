@@ -11,6 +11,7 @@ from .auth.views import auth_bp
 from .dashboard.coach import coach_bp
 from .dashboard.cyclist import cyclist_bp
 from .dashboard.import_export import import_export_bp
+from .sensor_data.sensor_data import sensor_bp
 from .models.database import db
 from .extensions import mail  # Import mail from extensions
 
@@ -22,7 +23,7 @@ def create_app(config_class=Config):
     db.init_app(app)
 
     # Allow CORS for all routes and origins
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
     JWTManager(app)
     mail.init_app(app)
@@ -32,5 +33,6 @@ def create_app(config_class=Config):
     app.register_blueprint(coach_bp, url_prefix='/coach')
     app.register_blueprint(cyclist_bp, url_prefix='/cyclist')
     app.register_blueprint(import_export_bp, url_prefix='/import_export')
+    app.register_blueprint(sensor_bp, url_prefix='/sensor')
 
     return app

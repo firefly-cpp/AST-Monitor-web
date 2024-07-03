@@ -97,6 +97,13 @@ const ImportPreview = () => {
         };
     };
 
+    const formatDuration = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}h ${m}m ${s}s`;
+    };
+
     if (error) {
         return <div>{error}</div>;
     }
@@ -119,69 +126,69 @@ const ImportPreview = () => {
                         <div className="session-cards">
                             <div className="card">
                                 <h4>Altitude Avg</h4>
-                                <p>{parseFloat(selectedSession.altitude_avg).toFixed(2)} m</p>
+                                <p>{Math.round(selectedSession.altitude_avg)} m</p>
                             </div>
                             <div className="card">
                                 <h4>Altitude Max</h4>
-                                <p>{parseFloat(selectedSession.altitude_max).toFixed(2)} m</p>
+                                <p>{Math.round(selectedSession.altitude_max)} m</p>
                             </div>
                             <div className="card">
                                 <h4>Altitude Min</h4>
-                                <p>{parseFloat(selectedSession.altitude_min).toFixed(2)} m</p>
+                                <p>{Math.round(selectedSession.altitude_min)} m</p>
                             </div>
                             <div className="card">
                                 <h4>Ascent</h4>
-                                <p>{parseFloat(selectedSession.ascent).toFixed(2)} m</p>
+                                <p>{Math.round(selectedSession.ascent)} m</p>
                             </div>
                             <div className="card">
                                 <h4>Calories</h4>
-                                <p>{parseFloat(selectedSession.calories).toFixed(2)} kcal</p>
+                                <p>{Math.round(selectedSession.calories)} kcal</p>
                             </div>
                             <div className="card">
                                 <h4>Descent</h4>
-                                <p>{parseFloat(selectedSession.descent).toFixed(2)} m</p>
+                                <p>{Math.round(selectedSession.descent)} m</p>
                             </div>
                             <div className="card">
                                 <h4>Distance</h4>
-                                <p>{parseFloat(selectedSession.distance).toFixed(2)} km</p>
+                                <p>{(selectedSession.distance / 1000).toFixed(2)} km</p>
                             </div>
                             <div className="card">
                                 <h4>Duration</h4>
-                                <p>{parseFloat(selectedSession.duration).toFixed(2)} seconds</p>
+                                <p>{formatDuration(selectedSession.duration)}</p>
                             </div>
                             <div className="card">
                                 <h4>HR Avg</h4>
-                                <p>{parseFloat(selectedSession.hr_avg).toFixed(2)} bpm</p>
+                                <p>{Math.round(selectedSession.hr_avg)} bpm</p>
                             </div>
                             <div className="card">
                                 <h4>HR Max</h4>
-                                <p>{parseFloat(selectedSession.hr_max).toFixed(2)} bpm</p>
+                                <p>{Math.round(selectedSession.hr_max)} bpm</p>
                             </div>
                             <div className="card">
                                 <h4>HR Min</h4>
-                                <p>{parseFloat(selectedSession.hr_min).toFixed(2)} bpm</p>
-                            </div>
-                            <div className="card">
-                                <h4>Total Distance</h4>
-                                <p>{parseFloat(selectedSession.total_distance).toFixed(2)} km</p>
+                                <p>{Math.round(selectedSession.hr_min)} bpm</p>
                             </div>
                         </div>
 
                         {selectedSession.weather && (
-                            <div className="weather-container">
-                                <h4>Weather Data</h4>
+                            <div className="main-container weather-details-container">
+                                <h3>Weather Data</h3>
                                 <p>Weather conditions during your session:</p>
                                 <div className="weather-card">
-                                    <p><strong>Temperature:</strong> {selectedSession.weather.temp_c ? `${parseFloat(selectedSession.weather.temp_c).toFixed(2)}°C` : 'N/A'}</p>
-                                    <p><strong>Condition:</strong> {selectedSession.weather.condition ? selectedSession.weather.condition : 'N/A'}</p>
-                                    <p><strong>Wind Speed:</strong> {selectedSession.weather.wind_kph ? `${parseFloat(selectedSession.weather.wind_kph).toFixed(2)} kph` : 'N/A'}</p>
-                                    <p><strong>Humidity:</strong> {selectedSession.weather.humidity ? `${parseFloat(selectedSession.weather.humidity).toFixed(2)}%` : 'N/A'}</p>
+                                    <p><strong>Temperature:</strong> {selectedSession.weather.temp_c !== null ? `${parseFloat(selectedSession.weather.temp_c).toFixed(2)}°C` : 'N/A'}</p>
+                                    <p><strong>Apparent Temperature:</strong> {selectedSession.weather.apparent_temp_c !== null ? `${parseFloat(selectedSession.weather.apparent_temp_c).toFixed(2)}°C` : 'N/A'}</p>
+                                    <p><strong>Wind Speed:</strong> {selectedSession.weather.wind_kph !== null ? `${parseFloat(selectedSession.weather.wind_kph).toFixed(2)} kph` : 'N/A'}</p>
+                                    <p><strong>Humidity:</strong> {selectedSession.weather.humidity !== null ? `${parseFloat(selectedSession.weather.humidity).toFixed(2)}%` : 'N/A'}</p>
+                                    <p><strong>Precipitation:</strong> {selectedSession.weather.precipitation !== null ? `${parseFloat(selectedSession.weather.precipitation).toFixed(2)} mm` : 'N/A'}</p>
+                                    <p><strong>Rain:</strong> {selectedSession.weather.rain !== null ? `${parseFloat(selectedSession.weather.rain).toFixed(2)} mm` : 'N/A'}</p>
+                                    <p><strong>Cloud Cover:</strong> {selectedSession.weather.cloud_cover !== null ? `${parseFloat(selectedSession.weather.cloud_cover).toFixed(2)}%` : 'N/A'}</p>
                                 </div>
                             </div>
                         )}
+
                         {selectedSession.positions && selectedSession.positions.length > 0 && (
-                            <div className="map-container">
-                                <h4>Route Map</h4>
+                            <div className="main-container map-container">
+                                <h3>Route Map</h3>
                                 <p>View the route you took during your training session:</p>
                                 <MapContainer center={selectedSession.positions[0]} zoom={13} style={{ height: "80%", width: "100%" }}>
                                     <TileLayer
