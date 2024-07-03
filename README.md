@@ -17,6 +17,7 @@ The CYCLearn project aims to develop an easy to use platform designed to analyze
 
 
 ## Screenshots
+Screenshots of the CYCLearn application:
 
 ![Profile Overview](frontendphotos/ProfileOverview.png)
 *Profile Overview*
@@ -63,7 +64,6 @@ The CYCLearn project aims to develop an easy to use platform designed to analyze
 ![Health Monitoring](frontendphotos/HealthMonitoring.png)
 *Health Monitoring*
 
-Screenshots of the CYCLearn application:
 ![AST Monitor](frontendphotos/ASTMonitor.png)
 *AST Monitor*
 
