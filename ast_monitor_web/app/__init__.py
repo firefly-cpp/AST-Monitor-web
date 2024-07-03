@@ -16,7 +16,14 @@ from .models.database import db
 from .extensions import mail  # Import mail from extensions
 
 def create_app(config_class=Config):
-    """Create and configure the Flask application."""
+    """Create and configure the Flask application.
+
+    Args:
+        config_class (class, optional): The configuration class to use. Defaults to Config.
+
+    Returns:
+        Flask: The configured Flask application instance.
+    """
     app = Flask(__name__)
     app.config.from_object(config_class)
 

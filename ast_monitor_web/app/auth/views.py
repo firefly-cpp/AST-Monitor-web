@@ -21,7 +21,11 @@ auth_bp = Blueprint('auth_bp', __name__)
 
 @auth_bp.route('/register_coach', methods=['POST'])
 def register_coach():
-    """Register a new coach"""
+    """Register a new coach.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     data = request.get_json()
     username = data['username']
     email = data['email']
@@ -45,10 +49,13 @@ def register_coach():
         db.session.rollback()
         return jsonify({'message': 'Registration failed, please try again'}), 500
 
-
 @auth_bp.route('/register_cyclist', methods=['POST'])
 def register_cyclist():
-    """Register a new cyclist"""
+    """Register a new cyclist.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     data = request.get_json()
     username = data['username']
     email = data['email']
@@ -80,10 +87,13 @@ def register_cyclist():
         db.session.rollback()
         return jsonify({'message': 'Registration failed, please try again'}), 500
 
-
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Log in a user"""
+    """Log in a user.
+
+    Returns:
+        Response: JSON response with access token and role, or error message and status code.
+    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -100,10 +110,13 @@ def login():
         return jsonify({"message": "Incorrect password"}), 401
     return jsonify({"message": "Account not found"}), 404
 
-
 @auth_bp.route('/recover', methods=['POST'])
 def recover():
-    """Recover a user's password"""
+    """Recover a user's password.
+
+    Returns:
+        Response: JSON response with a password recovery message.
+    """
     data = request.get_json()
     email = data.get('email')
     user = Coach.query.filter_by(email=email).first() or Cyclist.query.filter_by(email=email).first()
@@ -118,10 +131,16 @@ def recover():
     mail.send(msg)
     return jsonify({"message": "If your email is in our database, you will receive a password recovery link."}), 200
 
-
 @auth_bp.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_with_token(token):
-    """Reset a user's password with token"""
+    """Reset a user's password with token.
+
+    Args:
+        token (str): The token for password reset.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     serializer = URLSafeTimedSerializer(current_app.config['JWT_SECRET_KEY'])
     try:
         email = serializer.loads(token, salt='email-recover', max_age=3600)
@@ -138,11 +157,14 @@ def reset_with_token(token):
     except (SignatureExpired, BadSignature):
         return jsonify({"message": "The reset link is invalid or has expired."}), 400
 
-
 @auth_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
-    """Get a user's profile"""
+    """Get a user's profile.
+
+    Returns:
+        Response: JSON response with user profile data.
+    """
     identity = get_jwt_identity()
     user_id = identity['user_id']
     role = identity['role']
@@ -156,11 +178,14 @@ def get_profile():
     user_data['role'] = role
     return jsonify(user_data), 200
 
-
 @auth_bp.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
-    """Update a user's profile"""
+    """Update a user's profile.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     identity = get_jwt_identity()
     user_id = identity['user_id']
     role = identity['role']
@@ -186,21 +211,27 @@ def update_profile():
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"}), 200
 
-
 @auth_bp.route('/coaches', methods=['GET'])
 def get_all_coaches():
-    """Fetch all coaches"""
+    """Fetch all coaches.
+
+    Returns:
+        Response: JSON response with a list of all coaches.
+    """
     try:
         coaches = Coach.query.all()
         return jsonify([coach.to_dict() for coach in coaches]), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
-
 @auth_bp.route('/upload_profile_picture', methods=['POST'])
 @jwt_required()
 def upload_profile_picture():
-    """Upload a profile picture"""
+    """Upload a profile picture.
+
+    Returns:
+        Response: JSON response with success or error message and status code.
+    """
     if 'profile_picture' not in request.files:
         return jsonify({"message": "No file part"}), 400
 
@@ -273,8 +304,14 @@ def delete_account():
     db.session.commit()
     return jsonify({"message": "Account deleted successfully"}), 200
 
-
 def allowed_file(filename):
-    """Check if the file is allowed based on the extension"""
+    """Check if the file is allowed based on the extension.
+
+    Args:
+        filename (str): The filename to check.
+
+    Returns:
+        bool: True if the file is allowed, False otherwise.
+    """
     allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
