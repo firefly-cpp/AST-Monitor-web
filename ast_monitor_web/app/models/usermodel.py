@@ -13,13 +13,17 @@ class Coach(db.Model):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
+    name = Column(String(50), nullable=True)
+    surname = Column(String(50), nullable=True)
     profile_picture = Column(String(255), nullable=True)
 
-    def __init__(self, username, password, email, profile_picture=None):
+    def __init__(self, username, password, email, name=None, surname=None, profile_picture=None):
         """Initialize a Coach instance."""
         self.username = username
         self.password = password
         self.email = email
+        self.name = name
+        self.surname = surname
         self.profile_picture = profile_picture
 
     def to_dict(self):
@@ -28,6 +32,8 @@ class Coach(db.Model):
             'coachID': self.coachID,
             'username': self.username,
             'email': self.email,
+            'name': self.name,
+            'surname': self.surname,
             'profile_picture': self.profile_picture if self.profile_picture else 'photos/profilePictures/blankProfilePic.png'
         }
 
@@ -40,6 +46,8 @@ class Cyclist(db.Model):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
+    name = Column(String(50), nullable=True)
+    surname = Column(String(50), nullable=True)
     date_of_birth = Column(Date)
     height_cm = Column(Integer)
     weight_kg = Column(Integer)
@@ -47,12 +55,14 @@ class Cyclist(db.Model):
 
     coach = db.relationship('Coach', backref=db.backref('cyclists', lazy=True))
 
-    def __init__(self, coachID, username, password, email, date_of_birth=None, height_cm=None, weight_kg=None, profile_picture=None):
+    def __init__(self, coachID, username, password, email, name=None, surname=None, date_of_birth=None, height_cm=None, weight_kg=None, profile_picture=None):
         """Initialize a Cyclist instance."""
         self.coachID = coachID
         self.username = username
         self.password = password
         self.email = email
+        self.name = name
+        self.surname = surname
         self.date_of_birth = date_of_birth
         self.height_cm = height_cm
         self.weight_kg = weight_kg
@@ -65,6 +75,8 @@ class Cyclist(db.Model):
             'coachID': self.coachID,
             'username': self.username,
             'email': self.email,
+            'name': self.name,
+            'surname': self.surname,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
             'height_cm': self.height_cm,
             'weight_kg': self.weight_kg,

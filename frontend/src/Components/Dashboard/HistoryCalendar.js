@@ -29,8 +29,10 @@ const endIcon = new L.Icon({
 const HistoryCalendar = ({ token, role }) => {
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
+    const [cyclist, setCyclist] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [generatingPDF, setGeneratingPDF] = useState(false); // New state variable
     const navigate = useNavigate();
     const { sessionId, id: cyclistId } = useParams();
 
@@ -54,6 +56,18 @@ const HistoryCalendar = ({ token, role }) => {
             setError('Failed to fetch sessions. Please try again later.');
             setLoading(false);
         });
+
+        if (role === 'coach') {
+            axios.get(`http://localhost:5000/coach/cyclist/${cyclistId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(response => {
+                setCyclist(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching cyclist details:', error);
+            });
+        }
     }, [token, role, cyclistId]);
 
     const onDayClick = (value) => {
@@ -148,6 +162,8 @@ const HistoryCalendar = ({ token, role }) => {
             return;
         }
 
+        setGeneratingPDF(true); // Start loading state
+
         axios.get(`http://localhost:5000/import_export/athlete/session/${selectedSession.sessionsID}/export_pdf`, {
             headers: { Authorization: `Bearer ${token}` },
             responseType: 'blob'
@@ -159,9 +175,11 @@ const HistoryCalendar = ({ token, role }) => {
             link.setAttribute('download', `session_report_${new Date(selectedSession.start_time).toLocaleDateString()}.pdf`);
             document.body.appendChild(link);
             link.click();
+            setGeneratingPDF(false); // End loading state
         })
         .catch(error => {
             console.error('Error generating PDF report:', error);
+            setGeneratingPDF(false); // End loading state
         });
     };
 
@@ -189,19 +207,36 @@ const HistoryCalendar = ({ token, role }) => {
         });
     };
 
+    const formatDuration = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}h ${m}m ${s}s`;
+    };
+
     return (
        <div className="athlete-profile-container">
-    <div className="athlete-profile">
-        <h2>Training History</h2>
-        <p>Track your training sessions and analyze your performance with detailed data and charts.</p>
-        <Calendar
-            onClickDay={onDayClick}
-            tileContent={({ date, view }) => (
-                sessions.some(session =>
-                    new Date(session.start_time).toDateString() === date.toDateString()) && <p>🔵</p>
+            {role === 'coach' && cyclist && (
+                <div className="cyclist-info-container">
+                    <h2>Cyclist's information</h2>
+                    <p><strong>Username:</strong> {cyclist.username}</p>
+                    <p><strong>Name:</strong> {cyclist.name}</p>
+                    <p><strong>Surname:</strong> {cyclist.surname}</p>
+                    <p><strong>Weight:</strong> {cyclist.weight_kg} kg</p>
+                    <p><strong>Height:</strong> {cyclist.height_cm} cm</p>
+                </div>
             )}
-            className="react-calendar"
-        />
+           <div className="athlete-profile">
+               <h2>Training History</h2>
+                <p>Track your training sessions and analyze your performance with detailed data and charts.</p>
+                <Calendar
+                    onClickDay={onDayClick}
+                    tileContent={({ date, view }) => (
+                        sessions.some(session =>
+                            new Date(session.start_time).toDateString() === date.toDateString()) && <p>🔵</p>
+                    )}
+                    className="react-calendar"
+                />
 
                 {selectedSession && (
                     <div>
@@ -211,51 +246,47 @@ const HistoryCalendar = ({ token, role }) => {
                             <div className="session-cards">
                                 <div className="card">
                                     <h4>Altitude Avg</h4>
-                                    <p>{parseFloat(selectedSession.altitude_avg).toFixed(2)} m</p>
+                                    <p>{Math.round(selectedSession.altitude_avg)} m</p>
                                 </div>
                                 <div className="card">
                                     <h4>Altitude Max</h4>
-                                    <p>{parseFloat(selectedSession.altitude_max).toFixed(2)} m</p>
+                                    <p>{Math.round(selectedSession.altitude_max)} m</p>
                                 </div>
                                 <div className="card">
                                     <h4>Altitude Min</h4>
-                                    <p>{parseFloat(                                    selectedSession.altitude_min).toFixed(2)} m</p>
+                                    <p>{Math.round(selectedSession.altitude_min)} m</p>
                                 </div>
                                 <div className="card">
                                     <h4>Ascent</h4>
-                                    <p>{parseFloat(selectedSession.ascent).toFixed(2)} m</p>
+                                    <p>{Math.round(selectedSession.ascent)} m</p>
                                 </div>
                                 <div className="card">
                                     <h4>Calories</h4>
-                                    <p>{parseFloat(selectedSession.calories).toFixed(2)} kcal</p>
+                                    <p>{Math.round(selectedSession.calories)} kcal</p>
                                 </div>
                                 <div className="card">
                                     <h4>Descent</h4>
-                                    <p>{parseFloat(selectedSession.descent).toFixed(2)} m</p>
+                                    <p>{Math.round(selectedSession.descent)} m</p>
                                 </div>
                                 <div className="card">
                                     <h4>Distance</h4>
-                                    <p>{parseFloat(selectedSession.distance).toFixed(2)} km</p>
+                                    <p>{(selectedSession.distance / 1000).toFixed(2)} km</p>
                                 </div>
                                 <div className="card">
                                     <h4>Duration</h4>
-                                    <p>{parseFloat(selectedSession.duration).toFixed(2)} seconds</p>
+                                    <p>{formatDuration(selectedSession.duration)}</p>
                                 </div>
                                 <div className="card">
                                     <h4>HR Avg</h4>
-                                    <p>{parseFloat(selectedSession.hr_avg).toFixed(2)} bpm</p>
+                                    <p>{Math.round(selectedSession.hr_avg)} bpm</p>
                                 </div>
                                 <div className="card">
                                     <h4>HR Max</h4>
-                                    <p>{parseFloat(selectedSession.hr_max).toFixed(2)} bpm</p>
+                                    <p>{Math.round(selectedSession.hr_max)} bpm</p>
                                 </div>
                                 <div className="card">
                                     <h4>HR Min</h4>
-                                    <p>{parseFloat(selectedSession.hr_min).toFixed(2)} bpm</p>
-                                </div>
-                                <div className="card">
-                                    <h4>Total Distance</h4>
-                                    <p>{parseFloat(selectedSession.total_distance).toFixed(2)} km</p>
+                                    <p>{Math.round(selectedSession.hr_min)} bpm</p>
                                 </div>
                             </div>
                         </div>
@@ -298,7 +329,7 @@ const HistoryCalendar = ({ token, role }) => {
                                 </MapContainer>
                             </div>
                         )}
-                        
+
                         <div className="chart-row">
                             <div className="chart-container">
                                 <h4>Hill Data</h4>
@@ -342,6 +373,11 @@ const HistoryCalendar = ({ token, role }) => {
                                 Export to JSON
                             </button>
                         </div>
+                        {generatingPDF && (
+                            <div className="loading-overlay">
+                                <div className="loading-message">Please wait while we generate your PDF...</div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -350,4 +386,3 @@ const HistoryCalendar = ({ token, role }) => {
 };
 
 export default HistoryCalendar;
-

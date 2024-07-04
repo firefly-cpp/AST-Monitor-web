@@ -19,7 +19,6 @@ from ..utils import get_weather_data, compute_hill_data
 
 cyclist_bp = Blueprint('cyclist_bp', __name__)
 
-
 HR_MAX_THRESHOLD = 200  # Example threshold for high heart rate
 HR_MIN_THRESHOLD = 50  # Example threshold for low heart rate
 
@@ -28,9 +27,12 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..
 RULES_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/generated_rules.json')
 CSV_FILE_PATH = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/treci.csv')
 
-
 def build_cors_preflight_response():
-    """Build a CORS preflight response."""
+    """Build a CORS preflight response.
+
+    Returns:
+        Response: A Flask response with CORS headers.
+    """
     response = make_response()
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
@@ -40,7 +42,11 @@ def build_cors_preflight_response():
 @cyclist_bp.route('/sessions', methods=['GET'])
 @jwt_required()
 def get_cyclist_sessions():
-    """Get all sessions for the current cyclist."""
+    """Get all sessions for the current cyclist.
+
+    Returns:
+        Response: JSON response with a list of sessions and their start times.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -63,13 +69,18 @@ def get_cyclist_sessions():
         logging.error("Error fetching sessions: %s", str(e))
         return jsonify({"error": "Error fetching sessions"}), 500
 
-
-CSV_MARIBOR =  os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/open-meteo-maribor.csv')
-
+CSV_MARIBOR = os.path.join(PROJECT_ROOT, 'ast_monitor_web/csv/open-meteo-maribor.csv')
 
 def get_weather_data_from_csv(date):
+    """Fetch weather data from a CSV file for a specific date.
+
+    Args:
+        date (datetime.date): The date for which to fetch weather data.
+
+    Returns:
+        dict: A dictionary containing weather data, or an empty dictionary if data is not found.
+    """
     try:
-        # Skip the first 2 lines which are metadata and an empty line
         df = pd.read_csv(CSV_MARIBOR, skiprows=2, parse_dates=['time'])
         weather_data = df[df['time'].dt.date == date]
         if weather_data.empty:
@@ -90,8 +101,8 @@ def get_weather_data_from_csv(date):
         logging.error("Error fetching weather data from CSV: %s", e)
         return {}
 
-
 class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder to handle NumPy data types."""
     def default(self, obj):
         if isinstance(obj, np.int64):
             return int(obj)
@@ -102,7 +113,14 @@ class CustomJSONEncoder(json.JSONEncoder):
 @cyclist_bp.route('/session/<int:session_id>', methods=['GET'])
 @jwt_required()
 def get_session_details(session_id):
-    """Get details for a specific session."""
+    """Get details for a specific session.
+
+    Args:
+        session_id (int): The ID of the session to retrieve.
+
+    Returns:
+        Response: JSON response with session details or error message and status code.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -129,7 +147,6 @@ def get_session_details(session_id):
         hill_data = compute_hill_data(session)
         logging.info("Hill data: %s", hill_data)
 
-        # Convert int64 types to standard Python integers
         session_data = {
             "sessionsID": int(session.sessionsID),
             "altitude_avg": float(session.altitude_avg) if session.altitude_avg else None,
@@ -159,10 +176,15 @@ def get_session_details(session_id):
     except Exception as e:
         logging.error("Error fetching session details: %s", str(e), exc_info=True)
         return jsonify({"error": "Error fetching session details"}), 500
+
 @cyclist_bp.route('/run_niaarm', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def run_niaarm():
-    """Run the NiaARM algorithm on the CSV dataset."""
+    """Run the NiaARM algorithm on the CSV dataset.
+
+    Returns:
+        Response: JSON response with the generated rules and run time, or error message and status code.
+    """
     if request.method == 'OPTIONS':
         return build_cors_preflight_response()
     elif request.method == 'POST':
@@ -215,11 +237,14 @@ def run_niaarm():
             current_app.logger.error("Error running NiaARM: %s", str(e))
             return jsonify({"error": f"Error running NiaARM: {str(e)}"}), 500
 
-
 @cyclist_bp.route('/get_saved_rules', methods=['GET'])
 @jwt_required()
 def get_saved_rules():
-    """Get saved rules from the rules file."""
+    """Get saved rules from the rules file.
+
+    Returns:
+        Response: JSON response with saved rules or error message and status code.
+    """
     try:
         if not os.path.exists(RULES_FILE_PATH):
             return jsonify({"error": "Rules file not found"}), 404
@@ -232,16 +257,29 @@ def get_saved_rules():
         current_app.logger.error("Error fetching saved rules: %s", str(e))
         return jsonify({"error": f"Error fetching saved rules: {str(e)}"}), 500
 
-
 def extract_heart_rate_rules(rules):
-    """Extract heart rate related rules from the list of rules."""
+    """Extract heart rate related rules from the list of rules.
+
+    Args:
+        rules (list): The list of rules to filter.
+
+    Returns:
+        list: The list of heart rate related rules.
+    """
     hr_metrics = ['hr_max', 'hr_avg', 'hr_min']
     hr_rules = [rule for rule in rules if any(metric in str(rule['rhs']) for metric in hr_metrics)]
     return hr_rules
 
-
 def check_session_against_rules(session_data, rules):
-    """Check a session against a set of rules."""
+    """Check a session against a set of rules.
+
+    Args:
+        session_data (dict): The session data to check.
+        rules (list): The list of rules to check against.
+
+    Returns:
+        list: A list of warnings generated based on the rules.
+    """
     warnings = []
 
     for rule in rules:
@@ -268,9 +306,15 @@ def check_session_against_rules(session_data, rules):
 
     return warnings
 
-
 def interpret_warning(rule):
-    """Interpret a rule and return a warning message."""
+    """Interpret a rule and return a warning message.
+
+    Args:
+        rule (dict): The rule to interpret.
+
+    Returns:
+        str: The warning message generated based on the rule.
+    """
     lhs_descriptions = " AND ".join(rule['lhs'])
     rhs_descriptions = " AND ".join(rule['rhs'])
     additional_text = ""
@@ -287,18 +331,27 @@ def interpret_warning(rule):
 
     return f"Warning: If {lhs_descriptions}, then {rhs_descriptions}. This could indicate potential health risks based on your recent session data. Please monitor your health metrics closely.{additional_text}"
 
-
 def extract_range(condition):
-    """Extract a range from a condition string."""
+    """Extract a range from a condition string.
+
+    Args:
+        condition (str): The condition string to extract the range from.
+
+    Returns:
+        tuple: A tuple containing the lower and upper bounds of the range.
+    """
     import re
     match = re.search(r'\[(.*),(.*)\]', condition)
     return float(match.group(1)), float(match.group(2))
 
-
 @cyclist_bp.route('/check_session', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def check_session():
-    """Check a session against the saved rules."""
+    """Check a session against the saved rules.
+
+    Returns:
+        Response: JSON response with warnings or error message and status code.
+    """
     if request.method == 'OPTIONS':
         return build_cors_preflight_response()
     elif request.method == 'POST':
@@ -342,11 +395,14 @@ def check_session():
             current_app.logger.error("Error checking session: %s", str(e))
             return jsonify({"error": f"Error checking session: {str(e)}"}), 500
 
-
 @cyclist_bp.route('/training_plans', methods=['GET'])
 @jwt_required()
 def get_cyclist_training_plans():
-    """Get training plans for the current cyclist."""
+    """Get training plans for the current cyclist.
+
+    Returns:
+        Response: JSON response with a list of training plans or error message and status code.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -367,11 +423,17 @@ def get_cyclist_training_plans():
         logging.error("Error fetching training plans: %s", str(e))
         return jsonify({"error": "Error fetching training plans"}), 500
 
-
 @cyclist_bp.route('/training_plans/<int:plan_id>/execute', methods=['POST'])
 @jwt_required()
 def execute_training_plan(plan_id):
-    """Execute a training plan for the current cyclist."""
+    """Execute a training plan for the current cyclist.
+
+    Args:
+        plan_id (int): The ID of the training plan to execute.
+
+    Returns:
+        Response: JSON response with success message or error message and status code.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -397,11 +459,17 @@ def execute_training_plan(plan_id):
         db.session.rollback()
         return jsonify({"error": f"Error executing training plan: {str(e)}"}), 500
 
-
 @cyclist_bp.route('/training_plans/<int:plan_id>', methods=['DELETE'])
 @jwt_required()
 def delete_training_plan(plan_id):
-    """Delete a training plan for the current cyclist."""
+    """Delete a training plan for the current cyclist.
+
+    Args:
+        plan_id (int): The ID of the training plan to delete.
+
+    Returns:
+        Response: JSON response with success message or error message and status code.
+    """
     identity = get_jwt_identity()
     current_user_id = identity['user_id']
     current_user_role = identity['role']
@@ -426,4 +494,3 @@ def delete_training_plan(plan_id):
         logging.error("Error deleting training plan: %s", str(e))
         db.session.rollback()
         return jsonify({"error": f"Error deleting training plan: {str(e)}"}), 500
-

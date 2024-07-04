@@ -27,6 +27,26 @@ const AthleteOverview = ({ token }) => {
     });
   }, [token]);
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB').replace(/\//g, '.'); // Convert to DD.MM.YYYY format
+  };
+
+  const formatTime = (timeString) => {
+    return timeString.substring(0, 5); // Extract HH:MM from HH:MM:SS
+  };
+
+  const formatDuration = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h} hours ${m} minutes ${s} seconds`;
+  };
+
+  const formatDistance = (meters) => {
+    return (meters / 1000).toFixed(2) + ' km'; // Convert meters to kilometers
+  };
+
   if (loading) {
     return <div>Loading athletes...</div>;
   }
@@ -37,7 +57,7 @@ const AthleteOverview = ({ token }) => {
 
   return (
     <div className="athlete-overview">
-      <h2>Athlete Overview</h2>
+      <h2>Cyclist Overview</h2>
       {athletes.length > 0 ? (
         <div className="athlete-grid">
           {athletes.map(athlete => (
@@ -45,11 +65,11 @@ const AthleteOverview = ({ token }) => {
               <strong>{athlete.username}</strong>
               {athlete.last_session ? (
                 <div>
-                  <p>Last session date: {athlete.last_session.time.split('T')[0]}</p>
-                  <p>Time of the session: {athlete.last_session.time.split('T')[1]}</p>
-                  <p>Calories burned: {athlete.last_session.calories}</p>
-                  <p>Duration: {athlete.last_session.duration} seconds</p>
-                  <p>Total Distance: {athlete.last_session.total_distance} m</p>
+                  <p>Last session date: {formatDate(athlete.last_session.time.split('T')[0])}</p>
+                  <p>Time of the session: {formatTime(athlete.last_session.time.split('T')[1])}</p>
+                  <p>Calories burned: {athlete.last_session.calories} kcal</p>
+                  <p>Duration: {formatDuration(athlete.last_session.duration)}</p>
+                  <p>Total Distance: {formatDistance(athlete.last_session.total_distance)}</p>
                 </div>
               ) : (
                 <p>No sessions yet</p>

@@ -8,6 +8,8 @@ const Register = ({ onRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
   const [role, setRole] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [height, setHeight] = useState('');
@@ -37,6 +39,8 @@ const Register = ({ onRegister }) => {
       username,
       email,
       password,
+      name,
+      surname,
       role,
       ...(role === 'cyclist' && {
         coachID,
@@ -71,6 +75,10 @@ const Register = ({ onRegister }) => {
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <label>Password:</label>
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <label>Name:</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+      <label>Surname:</label>
+      <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} required />
       {role === 'cyclist' && coaches.length > 0 && (
         <label>
           Coach:

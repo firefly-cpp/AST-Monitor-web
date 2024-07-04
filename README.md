@@ -16,6 +16,59 @@ The CYCLearn project aims to develop an easy to use platform designed to analyze
 - **User-Friendly Interface:** Provide an intuitive and easy-to-use interface for both coaches and cyclists.
 
 
+## Screenshots
+Screenshots of the CYCLearn application:
+
+![Profile Overview](frontendphotos/ProfileOverview.png)
+*Profile Overview*
+
+![Cyclists Overview](frontendphotos/CyclistsOverview.png)
+*Cyclists Overview*
+
+![Training Calendar](frontendphotos/TrainingCalender.png)
+*Training Calendar*
+
+![Training Metrics](frontendphotos/TrainingMetrics.png)
+*Training Metrics*
+
+![Weather Data](frontendphotos/WeatherData.PNG)
+*Weather Data*
+
+![Route Map](frontendphotos/RouteMap.png)
+*Route Map*
+
+![Hill Data](frontendphotos/HillData.png)
+*Hill Data*
+
+![Altitude](frontendphotos/Altitude.png)
+*Altitude Over Time chart*
+
+![Heart Rate](frontendphotos/HeartRate.PNG)
+*Heart Rate Over Time chart*
+
+![Speed](frontendphotos/Speed.PNG)
+*Speed Over Time chart*
+
+![Training Plan](frontendphotos/TrainingPlan.png)
+*Training Plan*
+
+![Training Template](frontendphotos/TrainingTemplate.png)
+*Training Template*
+
+![Create Plan](frontendphotos/CreatePlan.png)
+*Create Plan*
+
+![My Plans](frontendphotos/MyPlans.png)
+*My Plans*
+
+![Health Monitoring](frontendphotos/HealthMonitoring.png)
+*Health Monitoring*
+
+![AST Monitor](frontendphotos/ASTMonitor.png)
+*AST Monitor*
+
+![Import Export](frontendphotos/ImportExport.png)
+*Import Export*
 
 
 ## Backend setup
@@ -40,7 +93,7 @@ The CYCLearn project aims to develop an easy to use platform designed to analyze
 
 - Create a new PostgreSQL database.
 
-- Navigate to the database/creatingDBscript.sql file and run it in the query to set up the database schema.
+- Navigate to the `database/creatingDBscript.sql` file and run the query to set up the database schema.
 
 4. **Create an environment file:**
 
